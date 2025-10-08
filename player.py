@@ -35,3 +35,9 @@ class Player(Widget):
             self.x = 0
         elif self.top > Window.height:
             self.top = Window.height
+
+    def shoot(self):
+        print("pium pium")
+
+    def recolect_items(self):
+        print("item recogido")

@@ -1,7 +1,8 @@
 from kivy.uix.widget import Widget
 from kivy.properties import NumericProperty
-from kivy.graphics import Color, Rectangle
+from kivy.graphics import  Rectangle
 from kivy.core.window import Window
+from kivy.core.image import Image as CoreImage
 
 
 
@@ -13,8 +14,12 @@ class Player(Widget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         with self.canvas:
-            Color(0, 1, 0)
-            self.rect = Rectangle(pos=self.pos, size=self.size)
+            # Carga la imagen como textura
+            self.rect = Rectangle(
+                pos=self.pos,
+                size=self.size,
+                source="src/ch1.png"  # ruta a tu imagen PNG
+            )
 
         self.bind(pos=self.update_rect, size=self.update_rect)
 

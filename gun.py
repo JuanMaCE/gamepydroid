@@ -9,14 +9,17 @@ class Gun(Widget):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.velocity = 0.03
+        self.velocity = 0.07
         self.angle = 0
         self.radius = 65
         self.number_of_bullets = 10
         #175, 100
         with self.canvas:
-            Color(0, 1, 0)
-            self.rect = Rectangle(pos=self.pos, size=self.size)
+            self.rect = Rectangle(
+                pos=self.pos,
+                size=self.size,
+                source="src/gun1.png"  # ruta a tu imagen PNG
+            )
         self.bind(pos=self.update_rect, size=self.update_rect)
 
 

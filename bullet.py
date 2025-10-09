@@ -8,8 +8,11 @@ class Bullet(Widget):
         self.velocity = 10  # píxeles por frame
         self.first_angle = True
         with self.canvas:
-            Color(0, 1, 0)
-            self.rect = Rectangle(pos=self.pos, size=self.size)
+            self.rect = Rectangle(
+                pos=self.pos,
+                size=self.size,
+                source="src/bullet.png"  # ruta a tu imagen PNG
+            )
         self.bind(pos=self.update_rect, size=self.update_rect)
 
     def update_rect(self, *args):
@@ -17,7 +20,6 @@ class Bullet(Widget):
         self.rect.size = self.size
 
     def move(self, angle):
-        # Mueve la bala en línea recta según su ángulo
         if not self.first_angle:
             self.x += math.cos(self.angle) * self.velocity
             self.y += math.sin(self.angle) * self.velocity

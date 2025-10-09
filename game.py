@@ -1,57 +1,93 @@
-from random import randint
-from PyQt6.uic.pyuic import generate
 from kivy.uix.widget import Widget
 from kivy.clock import Clock
 from kivy.core.window import Window
-from numpy.matlib import empty
-from player import Player
-from mummy import Mummy
-from gun import Gun
-from bullet import Bullet
+from kivy.graphics import Rectangle
 import random
 
-
+from bullet import Bullet
+from gun import Gun
+from mummy import Mummy
+from player import Player
 
 
 class Game(Widget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        Window.size = (800, 450)
+
+        # --- Fondo ---
+        with self.canvas.before:  # <- "before" asegura que esté detrás de todo
+            self.bg = Rectangle(source='src/fondo.jpg', pos=self.pos, size=Window.size)
+
+        self.bind(size=self.update_bg, pos=self.update_bg)
+
+        # --- Variables del juego ---
         self.level = 1
-        self.player = Player(size=(50, 50), pos=(200, 100))
+        self.size_player = 75
+        self.size_enemy = 100
+        self.pos_initial_x = 400
+        self.pos_initial_y = 225
+
+        self.player = Player(size=(self.size_player, self.size_player), pos=(self.pos_initial_x, self.pos_initial_y))
         self.radius = 65
-        self.gun = Gun(size=(50, 20), pos=(200 + self.radius, 100 ))
+        self.gun = Gun(size=(50, 20), pos=(self.pos_initial_x + self.radius, self.pos_initial_y))
         self.enemies = []
         self.bullets = []
 
-        for j in range(5):
-            position_x = random.randint(0, 800)
-            position_y = random.randint(0, 450)
+        # --- Crear enemigos ---
+        for j in range(6):
+            rangos_x = [(0, 200), (400, 800)]
+            inicio, fin = random.choice(rangos_x)
+            position_x = random.randint(inicio, fin)
 
-            enemy = Mummy(size=(50, 50), pos=(position_x, position_y))
+            rangos_y = [(0, 100), (350, 450)]
+            inicio, fin = random.choice(rangos_y)
+            position_y = random.randint(inicio, fin)
+
+            enemy = Mummy(size=(self.size_enemy, self.size_enemy), pos=(position_x, position_y))
             self.enemies.append(enemy)
             self.add_widget(enemy)
 
+        # --- Agregar jugador y arma ---
         self.add_widget(self.gun)
         self.add_widget(self.player)
+
+        # --- Actualización ---
         Clock.schedule_interval(self.update, 1/120)
 
-        Window.size = (800, 450)
-
+        # --- Controles ---
         Window.bind(on_key_down=self.on_key_down)
         Window.bind(on_key_up=self.on_key_up)
 
+    def update_bg(self, *args):
+        self.bg.pos = self.pos
+        self.bg.size = Window.size
+
+
     def update(self, dt):
-
-
         self.gun.move(self.player.x, self.player.y)
         self.player.move()
-
+        # este es para ver si las balas impactan
         if self.bullets != []:
             for bullet in self.bullets:
                 bullet.move(self.gun.angle)
                 for enemy in self.enemies:
                     if bullet.collide_widget(enemy):
                         self.remove_widget(enemy)
+                        self.enemies.remove(enemy)
+                        self.bullets.remove(bullet)
+                        self.remove_widget(bullet)
+                        break
+        # este es para ver si hay colisión con el personaje
+        if self.enemies != []:
+            for enemy in self.enemies:
+                value = self.is_caught(enemy)
+                enemy.follow_player(self.player.x, self.player.y)
+                if self.player.collide_widget(enemy):
+                    self.remove_widget(self.player)
+                    self.remove_widget(enemy)
+                    self.remove_widget(self.gun)
+                    print("has muerto")
 
 
     def on_touch_down(self, touch):
@@ -85,6 +121,10 @@ class Game(Widget):
         self.player.velocity_x = 0
 
     def generate_bullet(self):
-        bullet = Bullet(size=(5, 5), pos=(self.gun.x, self.gun.y))
+        bullet = Bullet(size=(15, 15), pos=(self.gun.x, self.gun.y))
         self.bullets.append(bullet)
         self.add_widget(bullet)
+
+    #agregar interfaz
+    def is_caught(self, enemie: Mummy):
+        return enemie.collide_widget(self.player)

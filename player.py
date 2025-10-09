@@ -30,7 +30,7 @@ class Player(Widget):
     def move(self):
         self.y += self.velocity_y
         self.x += self.velocity_x
-
+        print(self.x, self.y)
         if self.y < 0:
             self.y = 0
         elif self.top > Window.height:

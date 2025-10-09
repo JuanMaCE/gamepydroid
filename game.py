@@ -1,3 +1,4 @@
+from kivy.uix.screenmanager import Screen
 from kivy.uix.widget import Widget
 from kivy.clock import Clock
 from kivy.core.window import Window
@@ -10,41 +11,56 @@ from mummy import Mummy
 from player import Player
 
 
-class Game(Widget):
+class Game(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         Window.size = (800, 450)
 
         # --- Fondo ---
-        with self.canvas.before:  # <- "before" asegura que esté detrás de todo
+        with self.canvas.before:
             self.bg = Rectangle(source='src/fondo.jpg', pos=self.pos, size=Window.size)
-
         self.bind(size=self.update_bg, pos=self.update_bg)
 
         # --- Variables del juego ---
         self.level = 1
-        self.size_player = 75
+        self.size_player = 60
         self.size_enemy = 100
         self.pos_initial_x = 400
         self.pos_initial_y = 225
+        self.count_of_bulls = 5
 
-        self.player = Player(size=(self.size_player, self.size_player), pos=(self.pos_initial_x, self.pos_initial_y))
+        self.player = Player(
+            size=(self.size_player, self.size_player),
+            pos=(self.pos_initial_x, self.pos_initial_y),
+            size_hint = (None, None)
+        )
+
         self.radius = 65
-        self.gun = Gun(size=(50, 20), pos=(self.pos_initial_x + self.radius, self.pos_initial_y))
+        self.gun = Gun(
+            size=(50, 20),
+            pos=(self.pos_initial_x + self.radius, self.pos_initial_y),
+            size_hint = (None, None)
+        )
+
         self.enemies = []
         self.bullets = []
 
         # --- Crear enemigos ---
-        for j in range(6):
-            rangos_x = [(0, 200), (400, 800)]
+        for j in range(5):
+            rangos_x = [(0, 50), (925, 975)]
             inicio, fin = random.choice(rangos_x)
             position_x = random.randint(inicio, fin)
 
-            rangos_y = [(0, 100), (350, 450)]
+            rangos_y = [(0, 55), (430, 503)]
             inicio, fin = random.choice(rangos_y)
             position_y = random.randint(inicio, fin)
 
-            enemy = Mummy(size=(self.size_enemy, self.size_enemy), pos=(position_x, position_y))
+            enemy = Mummy(
+                size=(self.size_enemy, self.size_enemy),
+                pos=(position_x, position_y),
+                size_hint = (None, None)
+            )
+
             self.enemies.append(enemy)
             self.add_widget(enemy)
 
@@ -52,12 +68,16 @@ class Game(Widget):
         self.add_widget(self.gun)
         self.add_widget(self.player)
 
+
         # --- Actualización ---
         Clock.schedule_interval(self.update, 1/120)
 
         # --- Controles ---
         Window.bind(on_key_down=self.on_key_down)
         Window.bind(on_key_up=self.on_key_up)
+
+
+
 
     def update_bg(self, *args):
         self.bg.pos = self.pos
@@ -87,6 +107,7 @@ class Game(Widget):
                     self.remove_widget(self.player)
                     self.remove_widget(enemy)
                     self.remove_widget(self.gun)
+                    Clock.schedule_once(self.go_to_finish, 0)
                     print("has muerto")
 
 
@@ -121,10 +142,19 @@ class Game(Widget):
         self.player.velocity_x = 0
 
     def generate_bullet(self):
-        bullet = Bullet(size=(15, 15), pos=(self.gun.x, self.gun.y))
-        self.bullets.append(bullet)
-        self.add_widget(bullet)
+        if self.count_of_bulls:
+            bullet = Bullet(
+                size=(15, 15),
+                pos=(self.gun.x, self.gun.y),
+                size_hint = (None, None)
+            )
+            self.count_of_bulls -= 1
+            self.bullets.append(bullet)
+            self.add_widget(bullet)
 
     #agregar interfaz
     def is_caught(self, enemie: Mummy):
         return enemie.collide_widget(self.player)
+
+    def go_to_finish(self, dt):
+        self.manager.current = "finish"

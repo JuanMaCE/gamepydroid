@@ -19,9 +19,6 @@ class Finish(Screen):
         self.add_widget(self.label)
 
 
-        # Simular carga (después de 3 segundos pasa al juego)
-        Clock.schedule_once(self.go_to_game, 3)
-
 
     def update_bg(self, *args):
         self.bg.pos = self.pos

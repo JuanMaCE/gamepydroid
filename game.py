@@ -15,7 +15,7 @@ class Game(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         Window.size = (800, 450)
-
+        self.level_passed = False
         # --- Fondo ---
         with self.canvas.before:
             self.bg = Rectangle(source='src/fondo.jpg', pos=self.pos, size=Window.size)
@@ -28,7 +28,6 @@ class Game(Screen):
         self.pos_initial_x = 400
         self.pos_initial_y = 225
         self.count_of_bulls = 5
-
         self.player = Player(
             size=(self.size_player, self.size_player),
             pos=(self.pos_initial_x, self.pos_initial_y),
@@ -44,6 +43,8 @@ class Game(Screen):
 
         self.enemies = []
         self.bullets = []
+        self.bullets_to_agregate = []
+
 
         # --- Crear enemigos ---
         for j in range(5):
@@ -71,6 +72,7 @@ class Game(Screen):
 
         # --- Actualización ---
         Clock.schedule_interval(self.update, 1/120)
+        Clock.schedule_interval(self.generate_bullet, 5)
 
         # --- Controles ---
         Window.bind(on_key_down=self.on_key_down)
@@ -88,7 +90,7 @@ class Game(Screen):
         self.gun.move(self.player.x, self.player.y)
         self.player.move()
         # este es para ver si las balas impactan
-        if self.bullets != []:
+        if self.bullets:
             for bullet in self.bullets:
                 bullet.move(self.gun.angle)
                 for enemy in self.enemies:
@@ -98,8 +100,9 @@ class Game(Screen):
                         self.bullets.remove(bullet)
                         self.remove_widget(bullet)
                         break
+
         # este es para ver si hay colisión con el personaje
-        if self.enemies != []:
+        if self.enemies:
             for enemy in self.enemies:
                 value = self.is_caught(enemy)
                 enemy.follow_player(self.player.x, self.player.y)
@@ -107,13 +110,22 @@ class Game(Screen):
                     self.remove_widget(self.player)
                     self.remove_widget(enemy)
                     self.remove_widget(self.gun)
-                    Clock.schedule_once(self.go_to_finish, 0)
+                    Clock.schedule_once(self.go_to_finish, 0.1)
                     print("has muerto")
 
+        print("enemies: ", len(self.enemies))
+        print("bulls: ", self.count_of_bulls)
+
+
+        if self.bullets_to_agregate:
+            for bullet in self.bullets_to_agregate:
+                if bullet.collide_widget(self.player):
+                    self.count_of_bulls += 1
+                    self.bullets_to_agregate.remove(bullet)
+                    self.remove_widget(bullet)
 
     def on_touch_down(self, touch):
-        print(touch.y)
-        print(touch.x)
+        pass
 
 
 
@@ -131,7 +143,7 @@ class Game(Screen):
         elif key == 276:
             self.player.velocity_x = -5
         elif key == 122:
-            self.generate_bullet()
+            self.shoot_bullet()
         elif key == 120:
             self.player.recolect_items()
 
@@ -141,7 +153,7 @@ class Game(Screen):
         self.player.velocity_y = 0
         self.player.velocity_x = 0
 
-    def generate_bullet(self):
+    def shoot_bullet(self):
         if self.count_of_bulls:
             bullet = Bullet(
                 size=(15, 15),
@@ -158,3 +170,15 @@ class Game(Screen):
 
     def go_to_finish(self, dt):
         self.manager.current = "finish"
+
+    def generate_bullet(self, dt):
+        size = 30
+        x = random.randint(0, 975)
+        y = random.randint(0, 505)
+        new_bullet = Bullet(
+            size=(size, size),
+            pos=(x, y),
+            size_hint=(None, None)
+        )
+        self.add_widget(new_bullet)
+        self.bullets_to_agregate.append(new_bullet)

@@ -12,7 +12,7 @@ from player import Player
 
 
 class Game(Screen):
-    def __init__(self, **kwargs):
+    def __init__(self, level: int, **kwargs):
         super().__init__(**kwargs)
         Window.size = (800, 450)
         self.level_passed = False
@@ -22,7 +22,7 @@ class Game(Screen):
         self.bind(size=self.update_bg, pos=self.update_bg)
 
         # --- Variables del juego ---
-        self.level = 1
+        self.level = level
         self.size_player = 60
         self.size_enemy = 100
         self.pos_initial_x = 400
@@ -47,33 +47,6 @@ class Game(Screen):
 
 
         # --- Crear enemigos ---
-        for j in range(5):
-            rangos_x = [(0, 50), (925, 975)]
-            inicio, fin = random.choice(rangos_x)
-            position_x = random.randint(inicio, fin)
-
-            rangos_y = [(0, 55), (430, 503)]
-            inicio, fin = random.choice(rangos_y)
-            position_y = random.randint(inicio, fin)
-
-            enemy = Mummy(
-                size=(self.size_enemy, self.size_enemy),
-                pos=(position_x, position_y),
-                size_hint = (None, None)
-            )
-
-            self.enemies.append(enemy)
-            self.add_widget(enemy)
-
-        # --- Agregar jugador y arma ---
-        self.add_widget(self.gun)
-        self.add_widget(self.player)
-
-
-        # --- Actualización ---
-        Clock.schedule_interval(self.update, 1/120)
-        Clock.schedule_interval(self.generate_bullet, 5)
-
         # --- Controles ---
         Window.bind(on_key_down=self.on_key_down)
         Window.bind(on_key_up=self.on_key_up)
@@ -123,6 +96,9 @@ class Game(Screen):
                     self.count_of_bulls += 1
                     self.bullets_to_agregate.remove(bullet)
                     self.remove_widget(bullet)
+
+        if len(self.enemies) == 0:
+            Clock.schedule_once(self.pass_level, 0.1)
 
     def on_touch_down(self, touch):
         pass
@@ -182,3 +158,37 @@ class Game(Screen):
         )
         self.add_widget(new_bullet)
         self.bullets_to_agregate.append(new_bullet)
+
+    def pass_level(self, dt):
+        self.level += 1
+        game_screen = self.manager.get_screen("screenNewLevel")
+        game_screen.set_level(self.level)
+        self.manager.current = "screenNewLevel"
+
+
+    def generate_game(self):
+        for j in range(3):
+            rangos_x = [(0, 50), (925, 975)]
+            inicio, fin = random.choice(rangos_x)
+            position_x = random.randint(inicio, fin)
+
+            rangos_y = [(0, 55), (430, 503)]
+            inicio, fin = random.choice(rangos_y)
+            position_y = random.randint(inicio, fin)
+
+            enemy = Mummy(
+                size=(self.size_enemy, self.size_enemy),
+                pos=(position_x, position_y),
+                size_hint=(None, None)
+            )
+
+            self.enemies.append(enemy)
+            self.add_widget(enemy)
+
+            # --- Agregar jugador y arma ---
+        self.add_widget(self.gun)
+        self.add_widget(self.player)
+
+        # --- Actualización ---
+        Clock.schedule_interval(self.update, 1 / 120)
+        Clock.schedule_interval(self.generate_bullet, 5)

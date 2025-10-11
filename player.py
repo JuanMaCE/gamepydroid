@@ -20,7 +20,6 @@ class Player(Widget):
                 size=self.size,
                 source="src/ch1.png"  # ruta a tu imagen PNG
             )
-
         self.bind(pos=self.update_rect, size=self.update_rect)
 
     def update_rect(self, *args):

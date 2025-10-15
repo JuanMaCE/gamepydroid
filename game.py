@@ -4,7 +4,6 @@ from kivy.core.window import Window
 from kivy.graphics import Rectangle
 import random
 
-# Asegúrate de que estas importaciones apunten a tus archivos correctos
 from bullet import Bullet
 from gun import Gun
 from mummy import Mummy
@@ -222,5 +221,18 @@ class Game(Screen):
         if self.bullet_gen_event:
             self.bullet_gen_event.cancel()
 
-    def is_caught(self, enemie: Mummy):
-        return enemie.collide_widget(self.player)
+    def is_caught(self, enemies: Mummy):
+        return enemies.collide_widget(self.player)
+
+    def on_touch_down(self, touch):
+        condition_x_shoot =  800 <= touch.x <= 880
+        condition_y_shoot = 150 <= touch.y <= 230
+
+        if condition_x_shoot and condition_y_shoot:
+            self.shoot_bullet()
+
+
+    def on_touch_up(self, touch):
+        self.player.velocity_y = 0
+        self.player.velocity_x = 0
+

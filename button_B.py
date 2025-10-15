@@ -1,24 +1,38 @@
-from kivy.core.window import Window
 from kivy.graphics import Color, Ellipse
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
-
+from kivy.properties import ListProperty, StringProperty
 
 class ButtonB(ButtonBehavior, Widget):
-    def __init__(self, letter='B', size=80, **kwargs):
+
+    outline_color = ListProperty([1, 1, 1, 0.4])
+    fill_color_normal = ListProperty([1, 1, 1, 0.2])
+    fill_color_down = ListProperty([1, 1, 1, 0.5])
+    text = StringProperty('B')
+
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.size_hint = (None, None)
-        self.size = (size, size)
         self.pos = [800, 150]
         with self.canvas:
-            Color(0.12, 0.56, 0.86, 0.5)
-            self.ellipse = Ellipse(pos=self.pos, size=self.size)
-        self.label = Label(text=letter, color=(1,1,1,0.1), bold=True, font_size=size*0.45,
-                           size_hint=(None,None), size=self.size, pos=self.pos, halign='center', valign='middle')
+            self.outline_canvas_color = Color(rgba=self.outline_color)
+            self.outline = Ellipse(size=self.size, pos=self.pos)
+
+            self.fill_canvas_color = Color(rgba=self.fill_color_normal)
+            self.fill = Ellipse(size=(self.width * 0.9, self.height * 0.9), pos=self.pos)
+
+        # 3. Etiqueta con la letra
+        self.label = Label(
+            text=self.text,
+            bold=True,
+            font_size=self.height * 0.5,
+            color=(1, 1, 1, 1),
+            pos=self.pos
+        )
         self.add_widget(self.label)
-        self.bind(pos=self._update, size=self._update)
-        print(self.pos)
+
+
 
     def _update(self, *args):
         self.ellipse.pos = self.pos
@@ -26,5 +40,3 @@ class ButtonB(ButtonBehavior, Widget):
         self.label.pos = self.pos
         self.label.size = self.size
 
-    def clicked(self):
-        pass

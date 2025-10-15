@@ -14,7 +14,7 @@ class Mummy(Widget):
             self.rect = Rectangle(
                 pos=self.pos,
                 size=self.size,
-                source="src/mummy.png"  # ruta a tu imagen PNGangle
+                source="src/momies/momia.png"  # ruta a tu imagen PNGangle
             )
         self.bind(pos=self.update_rect, size=self.update_rect)
 

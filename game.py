@@ -1,63 +1,116 @@
 from kivy.uix.screenmanager import Screen
-from kivy.uix.widget import Widget
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.graphics import Rectangle
 import random
 
+# Asegúrate de que estas importaciones apunten a tus archivos correctos
 from bullet import Bullet
 from gun import Gun
 from mummy import Mummy
 from player import Player
+from button_A import ButtonA
+from button_B import ButtonB
 
 
 class Game(Screen):
-    def __init__(self, level: int, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        Window.size = (800, 450)
+        self.level = 1
         self.level_passed = False
-        # --- Fondo ---
+
+        self.update_event = None
+        self.bullet_gen_event = None
+
         with self.canvas.before:
-            self.bg = Rectangle(source='src/fondo.jpg', pos=self.pos, size=Window.size)
+            self.bg = Rectangle(source='src/fondo.png', pos=self.pos, size=Window.size)
         self.bind(size=self.update_bg, pos=self.update_bg)
 
-        # --- Variables del juego ---
-        self.level = level
         self.size_player = 60
         self.size_enemy = 100
         self.pos_initial_x = 400
         self.pos_initial_y = 225
         self.count_of_bulls = 5
-        self.player = Player(
-            size=(self.size_player, self.size_player),
-            pos=(self.pos_initial_x, self.pos_initial_y),
-            size_hint = (None, None)
-        )
-
-        self.radius = 65
-        self.gun = Gun(
-            size=(50, 20),
-            pos=(self.pos_initial_x + self.radius, self.pos_initial_y),
-            size_hint = (None, None)
-        )
 
         self.enemies = []
         self.bullets = []
         self.bullets_to_agregate = []
 
+        self.player = Player(
+            size=(self.size_player, self.size_player),
+            size_hint=(None, None)
+        )
+        self.gun = Gun(
+            size=(50, 20),
+            size_hint=(None, None)
+        )
 
-        # --- Crear enemigos ---
-        # --- Controles ---
-        Window.bind(on_key_down=self.on_key_down)
-        Window.bind(on_key_up=self.on_key_up)
+        self.button = ButtonB()
+        self.button_A = ButtonA()
+        self._keyboard = Window.request_keyboard(self._on_keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self.on_key_down)
+        self._keyboard.bind(on_key_up=self.on_key_up)
 
 
-
+    def _on_keyboard_closed(self):
+        self._keyboard.unbind(on_key_down=self.on_key_down)
+        self._keyboard.unbind(on_key_up=self.on_key_up)
+        self._keyboard = None
 
     def update_bg(self, *args):
         self.bg.pos = self.pos
-        self.bg.size = Window.size
+        self.bg.size = self.size
 
+    def generate_game(self, level):
+        self.reset(level)
+        self.count_of_bulls = self.count_of_bulls + self.level * 2
+
+
+        for j in range(self.level * 3):
+            rangos_x = [(0, 50), (Window.width - 50, Window.width)]
+            inicio, fin = random.choice(rangos_x)
+            position_x = random.randint(inicio, fin)
+
+            rangos_y = [(0, 55), (Window.height - 55, Window.height)]
+            inicio, fin = random.choice(rangos_y)
+            position_y = random.randint(inicio, fin)
+
+            enemy = Mummy(
+                size=(self.size_enemy, self.size_enemy),
+                pos=(position_x, position_y),
+                size_hint=(None, None)
+            )
+            self.enemies.append(enemy)
+            self.add_widget(enemy)
+        self.add_widget(self.button)
+        self.add_widget(self.gun)
+        self.add_widget(self.player)
+        self.add_widget(self.button_A)
+
+        self.update_event = Clock.schedule_interval(self.update, 1 / 120)
+        self.bullet_gen_event = Clock.schedule_interval(self.generate_bullet, 5)
+
+    def reset_game(self, level_number):
+        self.clear_widgets()
+        self.level = level_number
+        self.level_passed = False
+
+        # Limpiar listas
+        self.enemies.clear()
+        self.bullets.clear()
+        self.bullets_to_agregate.clear()
+
+        # Reiniciar jugador
+        self.player.pos = (self.pos_initial_x, self.pos_initial_y)
+        self.player.velocity_x = 0
+        self.player.velocity_y = 0
+        self.count_of_bulls = self.count_of_bulls + self.level * 2
+
+    def stop_game(self):
+        if self.update_event:
+            self.update_event.cancel()
+        if self.bullet_gen_event:
+            self.bullet_gen_event.cancel()
 
     def update(self, dt):
         self.gun.move(self.player.x, self.player.y)
@@ -84,11 +137,6 @@ class Game(Screen):
                     self.remove_widget(enemy)
                     self.remove_widget(self.gun)
                     Clock.schedule_once(self.go_to_finish, 0.1)
-                    print("has muerto")
-
-        print("enemies: ", len(self.enemies))
-        print("bulls: ", self.count_of_bulls)
-
 
         if self.bullets_to_agregate:
             for bullet in self.bullets_to_agregate:
@@ -98,54 +146,28 @@ class Game(Screen):
                     self.remove_widget(bullet)
 
         if len(self.enemies) == 0:
-            Clock.schedule_once(self.pass_level, 0.1)
-
-    def on_touch_down(self, touch):
-        pass
+            Clock.schedule_once(self.pass_level, 0)
+            self.level_passed = True
 
 
+    def pass_level(self, *args):
+        self.stop()
+        next_level = self.level + 1
 
-    def on_touch_up(self, touch):
-        self.player.velocity_y = 0
+        screen_new_level = self.manager.get_screen("ScreenNewLevel")
+        screen_new_level.set_level(next_level)
+        self.manager.current = "ScreenNewLevel"
 
-    def on_key_down(self, window, key, *args):
-
-        if key == 273:
-            self.player.velocity_y = 5
-        elif key == 274:
-            self.player.velocity_y = -5
-        elif key == 275:
-            self.player.velocity_x = 5
-        elif key == 276:
-            self.player.velocity_x = -5
-        elif key == 122:
-            self.shoot_bullet()
-        elif key == 120:
-            self.player.recolect_items()
-
-    def on_key_up(self, window, key, *args):
-        self.player.velocity_y = 5
-        self.player.velocity_x = 5
-        self.player.velocity_y = 0
-        self.player.velocity_x = 0
+    def go_to_finish(self, *args):
+        self.stop()
+        self.manager.current = "finish"
 
     def shoot_bullet(self):
-        if self.count_of_bulls:
-            bullet = Bullet(
-                size=(15, 15),
-                pos=(self.gun.x, self.gun.y),
-                size_hint = (None, None)
-            )
+        if self.count_of_bulls > 0:
+            bullet = Bullet(pos=(self.gun.center_x - 7, self.gun.center_y - 7), size=(15, 15), size_hint=(None, None))
             self.count_of_bulls -= 1
             self.bullets.append(bullet)
             self.add_widget(bullet)
-
-    #agregar interfaz
-    def is_caught(self, enemie: Mummy):
-        return enemie.collide_widget(self.player)
-
-    def go_to_finish(self, dt):
-        self.manager.current = "finish"
 
     def generate_bullet(self, dt):
         size = 30
@@ -159,36 +181,46 @@ class Game(Screen):
         self.add_widget(new_bullet)
         self.bullets_to_agregate.append(new_bullet)
 
-    def pass_level(self, dt):
-        self.level += 1
-        game_screen = self.manager.get_screen("screenNewLevel")
-        game_screen.set_level(self.level)
-        self.manager.current = "screenNewLevel"
+    def on_key_down(self, keyboard, keycode, text, modifiers):
+        key = keycode[1]
+        if key == 'w' or key == 'up':
+            self.player.velocity_y = 5
+        elif key == 's' or key == 'down':
+            self.player.velocity_y = -5
+        elif key == 'd' or key == 'right':
+            self.player.velocity_x = 5
+        elif key == 'a' or key == 'left':
+            self.player.velocity_x = -5
+        elif key == 'z':
+            self.shoot_bullet()
+        return True
 
+    def on_key_up(self, keyboard, keycode):
+        key = keycode[1]
+        if key in ('w', 'up', 's', 'down'):
+            self.player.velocity_y = 0
+        elif key in ('d', 'right', 'a', 'left'):
+            self.player.velocity_x = 0
+        return True
 
-    def generate_game(self):
-        for j in range(3):
-            rangos_x = [(0, 50), (925, 975)]
-            inicio, fin = random.choice(rangos_x)
-            position_x = random.randint(inicio, fin)
+    def reset(self, level_number):
+        self.clear_widgets()
+        self.level = level_number
+        self.level_passed = False
 
-            rangos_y = [(0, 55), (430, 503)]
-            inicio, fin = random.choice(rangos_y)
-            position_y = random.randint(inicio, fin)
+        self.enemies.clear()
+        self.bullets.clear()
+        self.bullets_to_agregate.clear()
 
-            enemy = Mummy(
-                size=(self.size_enemy, self.size_enemy),
-                pos=(position_x, position_y),
-                size_hint=(None, None)
-            )
+        self.player.pos = (self.pos_initial_x, self.pos_initial_y)
+        self.player.velocity_x = 0
+        self.player.velocity_y = 0
 
-            self.enemies.append(enemy)
-            self.add_widget(enemy)
+    def stop(self):
+        if self.update_event:
+            self.update_event.cancel()
+        if self.bullet_gen_event:
+            self.bullet_gen_event.cancel()
 
-            # --- Agregar jugador y arma ---
-        self.add_widget(self.gun)
-        self.add_widget(self.player)
-
-        # --- Actualización ---
-        Clock.schedule_interval(self.update, 1 / 120)
-        Clock.schedule_interval(self.generate_bullet, 5)
+    def is_caught(self, enemie: Mummy):
+        return enemie.collide_widget(self.player)

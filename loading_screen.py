@@ -18,7 +18,6 @@ class LoadingScreen(Screen):
         self.label = Label(text="Cargando...", font_size=40, color=(1, 1, 1, 1))
         self.add_widget(self.label)
 
-        # Simular carga (después de 3 segundos pasa al juego)
         Clock.schedule_once(self.go_to_level, 1)
 
     def update_bg(self, *args):
@@ -27,6 +26,5 @@ class LoadingScreen(Screen):
 
     def go_to_level(self, *args):
 
-        screen_new_level = self.manager.get_screen("screenNewLevel")
-        screen_new_level.generate_screen()
-        self.manager.current = "screenNewLevel"
+        screen_new_level = self.manager.get_screen("ScreenNewLevel")
+        self.manager.current = "ScreenNewLevel"

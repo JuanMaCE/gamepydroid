@@ -1,114 +1,195 @@
-from kivy.app import App
-from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.uix.label import Label
+from kivy.uix.screenmanager import Screen
+from kivy.uix.widget import Widget
 from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.graphics import Color, Rectangle
+from kivy.graphics import Rectangle
 import random
 
-
-# ======= SCREEN DE NUEVO NIVEL =======
-class ScreenNewLevel(Screen):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        Window.size = (800, 450)
-        self.level = 1
-
-        with self.canvas:
-            Color(0, 0, 0, 1)
-            self.bg = Rectangle(pos=self.pos, size=Window.size)
-        self.bind(size=self.update_bg, pos=self.update_bg)
-
-        self.label = Label(text="Nivel..." + str(self.level),
-                           font_size=40, color=(1, 1, 1, 1))
-        self.add_widget(self.label)
-
-    def update_bg(self, *args):
-        self.bg.pos = self.pos
-        self.bg.size = Window.size
-
-    def set_level(self, new_level: int):
-        self.level = new_level
-        self.label.text = f"Nivel... {self.level}"
-        # esperar 2 segundos y luego pasar al juego
-        Clock.schedule_once(self.go_to_game, 2)
-
-    def go_to_game(self, dt):
-        game_screen = self.manager.get_screen("game")
-        game_screen.load_level(self.level)
-        self.manager.current = "game"
+from bullet import Bullet
+from gun import Gun
+from mummy import Mummy
+from player import Player
 
 
-# ======= SCREEN DEL JUEGO =======
+
+
 class Game(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.level = 0
         Window.size = (800, 450)
-        with self.canvas:
-            Color(0.1, 0.2, 0.3, 1)
-            self.bg = Rectangle(pos=self.pos, size=Window.size)
+        self.level_passed = False
+        # --- Fondo ---
+        with self.canvas.before:
+            self.bg = Rectangle(source='src/fondo.png', pos=self.pos, size=Window.size)
         self.bind(size=self.update_bg, pos=self.update_bg)
 
-        self.label = Label(text="Juego", font_size=40, color=(1, 1, 1, 1))
-        self.add_widget(self.label)
+        # --- Variables del juego ---
+        self.size_player = 60
+        self.size_enemy = 100
+        self.pos_initial_x = 400
+        self.pos_initial_y = 225
+        self.count_of_bulls = 5
+        self.player = Player(
+            size=(self.size_player, self.size_player),
+            pos=(self.pos_initial_x, self.pos_initial_y),
+            size_hint = (None, None)
+        )
 
-        self.level = 1
+        self.radius = 65
+        self.gun = Gun(
+            size=(50, 20),
+            pos=(self.pos_initial_x + self.radius, self.pos_initial_y),
+            size_hint = (None, None)
+        )
+
         self.enemies = []
-
-    def update_bg(self, *args):
-        self.bg.pos = self.pos
-        self.bg.size = Window.size
-
-    def load_level(self, level):
-        """Carga o reinicia el nivel"""
-        self.level = level
-        self.label.text = f"Jugando nivel {self.level}"
-        print(f"🟢 Iniciando nivel {self.level}")
-        # simular ganar el nivel después de 4 segundos
-        Clock.schedule_once(self.win_level, 4)
-
-    def win_level(self, dt):
-        print(f"🏁 Nivel {self.level} completado")
-        next_level = self.level + 1
-        # si quieres limitar niveles
-        if next_level > 5:
-            self.manager.current = "finish"
-            return
-        screen_new_level = self.manager.get_screen("screenNewLevel")
-        screen_new_level.set_level(next_level)
-        self.manager.current = "screenNewLevel"
+        self.bullets = []
+        self.bullets_to_agregate = []
 
 
-# ======= SCREEN FINAL =======
-class Finish(Screen):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        with self.canvas:
-            Color(0, 0, 0, 1)
-            self.bg = Rectangle(pos=self.pos, size=Window.size)
-        self.bind(size=self.update_bg, pos=self.update_bg)
+        # --- Crear enemigos ---
+        # --- Controles ---
+        Window.bind(on_key_down=self.on_key_down)
+        Window.bind(on_key_up=self.on_key_up)
 
-        self.label = Label(text="🎉 Has ganado el juego 🎉",
-                           font_size=40, color=(1, 1, 1, 1))
-        self.add_widget(self.label)
+
+
 
     def update_bg(self, *args):
         self.bg.pos = self.pos
         self.bg.size = Window.size
 
 
-# ======= APP PRINCIPAL =======
-class MyApp(App):
-    def build(self):
-        sm = ScreenManager()
-        sm.add_widget(ScreenNewLevel(name="screenNewLevel"))
-        sm.add_widget(Game(name="game"))
-        sm.add_widget(Finish(name="finish"))
+    def update(self, dt):
+        self.gun.move(self.player.x, self.player.y)
+        self.player.move()
+        # este es para ver si las balas impactan
+        if self.bullets:
+            for bullet in self.bullets:
+                bullet.move(self.gun.angle)
+                for enemy in self.enemies:
+                    if bullet.collide_widget(enemy):
+                        self.remove_widget(enemy)
+                        self.enemies.remove(enemy)
+                        self.bullets.remove(bullet)
+                        self.remove_widget(bullet)
+                        break
 
-        # comenzar con el nivel 1
-        sm.get_screen("screenNewLevel").set_level(1)
-        sm.current = "screenNewLevel"
-        return sm
+        # este es para ver si hay colisión con el personaje
+        if self.enemies:
+            for enemy in self.enemies:
+                value = self.is_caught(enemy)
+                enemy.follow_player(self.player.x, self.player.y)
+                if self.player.collide_widget(enemy):
+                    self.remove_widget(self.player)
+                    self.remove_widget(enemy)
+                    self.remove_widget(self.gun)
+                    Clock.schedule_once(self.go_to_finish, 0.1)
 
 
-MyApp().run()
+        if self.bullets_to_agregate:
+            for bullet in self.bullets_to_agregate:
+                if bullet.collide_widget(self.player):
+                    self.count_of_bulls += 1
+                    self.bullets_to_agregate.remove(bullet)
+                    self.remove_widget(bullet)
+
+        if len(self.enemies) == 0:
+            Clock.schedule_once(self.pass_level)
+            self.level_passed = True
+
+
+    def on_touch_down(self, touch):
+        pass
+
+
+    def on_touch_up(self, touch):
+        self.player.velocity_y = 0
+
+    def on_key_down(self, window, key, *args):
+
+        if key == 273:
+            self.player.velocity_y = 5
+        elif key == 274:
+            self.player.velocity_y = -5
+        elif key == 275:
+            self.player.velocity_x = 5
+        elif key == 276:
+            self.player.velocity_x = -5
+        elif key == 122:
+            self.shoot_bullet()
+        elif key == 120:
+            self.player.recolect_items()
+
+    def on_key_up(self, window, key, *args):
+        self.player.velocity_y = 5
+        self.player.velocity_x = 5
+        self.player.velocity_y = 0
+        self.player.velocity_x = 0
+
+    def shoot_bullet(self):
+        if self.count_of_bulls:
+            bullet = Bullet(
+                size=(15, 15),
+                pos=(self.gun.x, self.gun.y),
+                size_hint = (None, None)
+            )
+            self.count_of_bulls -= 1
+            self.bullets.append(bullet)
+            self.add_widget(bullet)
+
+    #agregar interfaz
+    def is_caught(self, enemie: Mummy):
+        return enemie.collide_widget(self.player)
+
+    def go_to_finish(self, dt):
+        self.manager.current = "finish"
+
+    def generate_bullet(self, dt):
+        size = 30
+        x = random.randint(0, 975)
+        y = random.randint(0, 505)
+        new_bullet = Bullet(
+            size=(size, size),
+            pos=(x, y),
+            size_hint=(None, None)
+        )
+        self.add_widget(new_bullet)
+        self.bullets_to_agregate.append(new_bullet)
+
+    def pass_level(self, dt):
+        self.level += 1
+        if self.level_passed:
+            screen_new_level = self.manager.get_screen("ScreenNewLevel")
+            screen_new_level.set_level(self.level)
+            self.manager.current = "ScreenNewLevel"
+        return
+
+    def generate_game(self, level):
+
+        for j in range(2):
+            rangos_x = [(0, 50), (925, 975)]
+            inicio, fin = random.choice(rangos_x)
+            position_x = random.randint(inicio, fin)
+
+            rangos_y = [(0, 55), (430, 503)]
+            inicio, fin = random.choice(rangos_y)
+            position_y = random.randint(inicio, fin)
+
+            enemy = Mummy(
+                size=(self.size_enemy, self.size_enemy),
+                pos=(position_x, position_y),
+                size_hint=(None, None)
+            )
+
+            self.enemies.append(enemy)
+            self.add_widget(enemy)
+
+            # --- Agregar jugador y arma ---
+        self.add_widget(self.gun)
+        self.add_widget(self.player)
+
+        # --- Actualización ---
+        Clock.schedule_interval(self.update, 1 / 120)
+        Clock.schedule_interval(self.generate_bullet, 5)

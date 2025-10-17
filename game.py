@@ -3,6 +3,7 @@ from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.graphics import Rectangle
 import random
+from kivy.core.window import Window
 
 from bullet import Bullet
 from gun import Gun
@@ -25,7 +26,7 @@ class Game(Screen):
             self.bg = Rectangle(source='src/fondo.png', pos=self.pos, size=Window.size)
         self.bind(size=self.update_bg, pos=self.update_bg)
 
-        self.size_player = 60
+        self.size_player = 70
         self.size_enemy = 100
         self.pos_initial_x = 400
         self.pos_initial_y = 225
@@ -49,6 +50,8 @@ class Game(Screen):
         self._keyboard = Window.request_keyboard(self._on_keyboard_closed, self)
         self._keyboard.bind(on_key_down=self.on_key_down)
         self._keyboard.bind(on_key_up=self.on_key_up)
+        Window.bind(on_joy_button_down=self.on_button_down)
+        Window.bind(on_joy_axis=self.on_joy_axis)
 
 
     def _on_keyboard_closed(self):
@@ -64,8 +67,8 @@ class Game(Screen):
         self.reset(level)
         self.count_of_bulls = self.count_of_bulls + self.level * 2
 
-
-        for j in range(self.level * 3):
+        count_of_enemies = self.level * 3
+        for j in range(count_of_enemies):
             rangos_x = [(0, 50), (Window.width - 50, Window.width)]
             inicio, fin = random.choice(rangos_x)
             position_x = random.randint(inicio, fin)
@@ -79,8 +82,10 @@ class Game(Screen):
                 pos=(position_x, position_y),
                 size_hint=(None, None)
             )
+            enemy.set_new_velocity(0.05 * self.level)
             self.enemies.append(enemy)
             self.add_widget(enemy)
+            print(enemy.velocity)
         self.add_widget(self.button)
         self.add_widget(self.gun)
         self.add_widget(self.player)
@@ -236,3 +241,27 @@ class Game(Screen):
         self.player.velocity_y = 0
         self.player.velocity_x = 0
 
+    def on_joy_axis(self, window, stickid, axisid, value):
+        print(f"Eje {axisid}: {value:.2f}")
+        if axisid == 0:
+            if value > 0:
+                self.player.velocity_x = 5
+            if value == 0:
+                self.player.velocity_x = 0
+            if value < 0:
+                self.player.velocity_x = -5
+        elif axisid == 1:
+            if value > -1:
+                self.player.velocity_y = -5
+            if value == -1:
+                self.player.velocity_y = 0
+            if value < -1:
+                self.player.velocity_y = +5
+        else:
+            self.player.velocity_x = 0
+            self.player.velocity_y = 0
+
+
+    def on_button_down(self, window, stickid, buttonid):
+        if buttonid == 0:
+            self.shoot_bullet()

@@ -27,3 +27,4 @@ class ButtonA(ButtonBehavior, Widget):
 
     def clicked(self):
         pass
+

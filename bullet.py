@@ -1,6 +1,7 @@
 from kivy.uix.widget import Widget
-from kivy.graphics import Color, Rectangle
+from kivy.graphics import Color, Rectangle, Rotate
 import math
+from kivy.core.window import Window
 
 class Bullet(Widget):
     def __init__(self, angle=0, **kwargs):
@@ -14,12 +15,14 @@ class Bullet(Widget):
                 source="src/bullet.png"  # ruta a tu imagen PNG
             )
         self.bind(pos=self.update_rect, size=self.update_rect)
+        self.rotation = Rotate(origin=(Window.width / 2, Window.height / 2))
 
     def update_rect(self, *args):
         self.rect.pos = self.pos
         self.rect.size = self.size
 
     def move(self, angle):
+        self.rotation.angle += 1  # aumenta el ángulo cada frame
         if not self.first_angle:
             self.x += math.cos(self.angle) * self.velocity
             self.y += math.sin(self.angle) * self.velocity

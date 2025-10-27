@@ -41,11 +41,9 @@ class Player(Widget):
         self.rect.size = self.size
 
     def move(self):
-        # Movimiento físico
         self.y += self.velocity_y
         self.x += self.velocity_x
 
-        # Mantener dentro de la ventana
         if self.y < 0:
             self.y = 0
         elif self.top > Window.height:
@@ -56,7 +54,6 @@ class Player(Widget):
         elif self.right > Window.width:
             self.right = Window.width
 
-        # Animación de movimiento
         self.frame_counter += 1
 
         if self.velocity_x > 0:
@@ -72,10 +69,10 @@ class Player(Widget):
                 self.rect.source = self.sprites_left[self.current_frame]
 
         else:
-            # Quieto — sprite por defecto
             self.rect.source = (
                 self.sprites_right[0] if self.facing_right else self.sprites_left[0]
             )
+
 
     def add_velocity_x(self, new_velocity):
         self.velocity_x += new_velocity
@@ -83,8 +80,4 @@ class Player(Widget):
     def add_velocity_y(self, new_velocity):
         self.velocity_y += new_velocity
 
-    def shoot(self):
-        print("pium pium")
 
-    def recolect_items(self):
-        print("item recogido")

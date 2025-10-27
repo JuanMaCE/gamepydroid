@@ -1,17 +1,16 @@
 from kivy.uix.screenmanager import Screen
 from kivy.clock import Clock
-from kivy.core.window import Window
 from kivy.graphics import Rectangle
 import random
 from kivy.core.window import Window
-
 from bullet import Bullet
 from gun import Gun
+from inputs.keyboardreader import KeyboardReader
 from mummy import Mummy
 from player import Player
 from button_A import ButtonA
 from button_B import ButtonB
-
+from inputs.player_move import PlayerMove
 
 class Game(Screen):
     def __init__(self, **kwargs):
@@ -45,19 +44,21 @@ class Game(Screen):
             size_hint=(None, None)
         )
 
+        # interfaz
+
+        self.reader = KeyboardReader()
+        self.player_move = PlayerMove()
+
+
+
         self.button = ButtonB()
         self.button_A = ButtonA()
-        self._keyboard = Window.request_keyboard(self._on_keyboard_closed, self)
-        self._keyboard.bind(on_key_down=self.on_key_down)
-        self._keyboard.bind(on_key_up=self.on_key_up)
-        Window.bind(on_joy_button_down=self.on_button_down)
         Window.bind(on_joy_axis=self.on_joy_axis)
 
 
-    def _on_keyboard_closed(self):
-        self._keyboard.unbind(on_key_down=self.on_key_down)
-        self._keyboard.unbind(on_key_up=self.on_key_up)
-        self._keyboard = None
+
+
+
 
     def update_bg(self, *args):
         self.bg.pos = self.pos
@@ -85,14 +86,13 @@ class Game(Screen):
             enemy.set_new_velocity(0.05 * self.level)
             self.enemies.append(enemy)
             self.add_widget(enemy)
-            print(enemy.velocity)
         self.add_widget(self.button)
         self.add_widget(self.gun)
         self.add_widget(self.player)
         self.add_widget(self.button_A)
 
         self.update_event = Clock.schedule_interval(self.update, 1 / 120)
-        self.bullet_gen_event = Clock.schedule_interval(self.generate_bullet, 5)
+        self.bullet_gen_event = Clock.schedule_interval(self.generate_bullet, 3)
 
     def reset_game(self, level_number):
         self.clear_widgets()
@@ -118,7 +118,6 @@ class Game(Screen):
 
     def update(self, dt):
         self.gun.move(self.player.x, self.player.y)
-        self.player.move()
         # este es para ver si las balas impactan
         if self.bullets:
             for bullet in self.bullets:
@@ -153,6 +152,9 @@ class Game(Screen):
             Clock.schedule_once(self.pass_level, 0)
             self.level_passed = True
 
+        self.player_move.move(self.player)
+
+
 
     def pass_level(self, *args):
         self.stop()
@@ -185,27 +187,14 @@ class Game(Screen):
         self.add_widget(new_bullet)
         self.bullets_to_agregate.append(new_bullet)
 
-    def on_key_down(self, keyboard, keycode, text, modifiers):
-        key = keycode[1]
-        if key == 'w' or key == 'up':
-            self.player.velocity_y = 5
-        elif key == 's' or key == 'down':
-            self.player.velocity_y = -5
-        elif key == 'd' or key == 'right':
-            self.player.velocity_x = 5
-        elif key == 'a' or key == 'left':
-            self.player.velocity_x = -5
-        elif key == 'z':
-            self.shoot_bullet()
-        return True
 
-    def on_key_up(self, keyboard, keycode):
-        key = keycode[1]
-        if key in ('w', 'up', 's', 'down'):
-            self.player.velocity_y = 0
-        elif key in ('d', 'right', 'a', 'left'):
-            self.player.velocity_x = 0
-        return True
+    def readDevice(self):
+
+        pass
+
+
+
+
 
     def reset(self, level_number):
         self.clear_widgets()
@@ -242,7 +231,6 @@ class Game(Screen):
         self.player.velocity_x = 0
 
     def on_joy_axis(self, window, stickid, axisid, value):
-        print(f"Eje {axisid}: {value:.2f}")
         if axisid == 0:
             if value > 0:
                 self.player.velocity_x = 5

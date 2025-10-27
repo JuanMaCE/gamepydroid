@@ -3,5 +3,5 @@ from abc import ABC, abstractmethod
 
 class InputDevice(ABC):
     @abstractmethod
-    def readData(self):
+    def readData(self)->dict[str, int]:
         pass

@@ -1,26 +1,23 @@
 from kivy.uix.screenmanager import Screen
 from kivy.clock import Clock
 from kivy.graphics import Rectangle
-import random
 from kivy.core.window import Window
-from bullet import Bullet
 from bulletmanager import BulletManager
 from collisionSystem import CollisionSystem
-from enemymovementsystem import EnemyMovementSystem
 from generationgame import GenerationGame
 from gun import Gun
-from inputs.keyboardreader import KeyboardReader
-from mummy import Mummy
+from inputs.phone import Phone
+from inputs.phonereader import PhoneReader
 from player import Player
-from button_B import ButtonB
 from inputs.player_move import PlayerMove
 
 class Game(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.enemies = None
         self.level = 1
         self.level_passed = False
-
+        self.phone = PhoneReader
         # Sistemas
         self.generator = None
         self.collision_system = CollisionSystem()
@@ -34,6 +31,9 @@ class Game(Screen):
         self._setup_background()
         self._setup_entities()
         self._setup_input()
+
+        self.player_move = PlayerMove()
+        self.player_move.setup_phone_controls(self)
 
     def _setup_background(self):
         with self.canvas.before:
@@ -55,10 +55,8 @@ class Game(Screen):
             size=(50, 20),
             size_hint=(None, None)
         )
-        self.button = ButtonB()
 
     def _setup_input(self):
-        self.reader = KeyboardReader()
         self.player_move = PlayerMove()
 
     def update_bg(self, *args):
@@ -80,7 +78,6 @@ class Game(Screen):
         self._start_game_events()
 
     def _add_game_widgets(self):
-        self.add_widget(self.button)
         self.add_widget(self.gun)
         self.add_widget(self.player)
 
@@ -89,22 +86,19 @@ class Game(Screen):
 
     def _start_game_events(self):
         self.update_event = Clock.schedule_interval(self.update, 1 / 120)
-        self.bullet_gen_event = Clock.schedule_interval(self._generate_bullet, 3)
+        self.bullet_gen_event = Clock.schedule_interval(self._generate_bullet, 4)
 
     def _generate_bullet(self, dt):
         self.bullet_manager.generate_random_bullet(Window.size, self.add_widget)
 
     def update(self, dt):
-        self.gun.move(self.player.x, self.player.y)
-        self.bullet_manager.move_bullets(self.gun.angle)
 
         for enemy in self.enemies:
             enemy.follow_player(self.player.x, self.player.y)
 
         self._check_collisions()
-
-        self.player_move.move(self.player)
-
+        self.player_move.move(self.player, self.gun, self.bullet_manager, self.add_widget)
+        self.bullet_manager.move_bullets(self.gun.angle)
         self._check_level_completion()
 
     def _check_collisions(self):
@@ -138,12 +132,6 @@ class Game(Screen):
             self.level_passed = True
             Clock.schedule_once(self.pass_level, 0)
 
-    def shoot_bullet(self):
-        self.bullet_manager.shoot_bullet(
-            (self.gun.center_x, self.gun.center_y),
-            self.gun.angle,
-            self.add_widget
-        )
 
     def reset_game(self, level_number):
         self.reset(level_number)
@@ -180,18 +168,3 @@ class Game(Screen):
     def go_to_finish(self, *args):
         self.stop()
         self.manager.current = "finish"
-
-    def on_touch_down(self, touch):
-        condition_x_shoot = 800 <= touch.x <= 880
-        condition_y_shoot = 150 <= touch.y <= 230
-
-        if condition_x_shoot and condition_y_shoot:
-            self.shoot_bullet()
-
-    def on_touch_up(self, touch):
-        self.player.velocity_y = 0
-        self.player.velocity_x = 0
-
-    def on_button_down(self, window, stickid, buttonid):
-        if buttonid == 0:
-            self.shoot_bullet()

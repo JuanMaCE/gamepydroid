@@ -10,7 +10,7 @@ class BulletManager:
         self.bullets_to_agregate = []
         self.bullet_count = 0
 
-    def shoot_bullet(self, gun_pos, gun_angle, add_widget_callback):
+    def shoot_bullet(self, gun_pos, add_widget_callback):
         if self.bullet_count > 0:
             bullet = Bullet(
                 pos=(gun_pos[0] - 7, gun_pos[1] - 7),

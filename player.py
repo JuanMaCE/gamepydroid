@@ -15,7 +15,8 @@ class Player(Widget):
         self.frame_counter = 0
         self.current_frame = 0
         self.facing_right = True
-        self.walk_speed = 6
+        self.walk_speed = 5
+        self.count_bullets = 0
 
         # Listas de sprites
         self.sprites_right = [

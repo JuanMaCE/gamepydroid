@@ -13,6 +13,8 @@ class Controller(InputDevice):
         }
 
         Window.bind(on_joy_axis=self.on_joy_axis)
+        Window.bind(on_joy_button_down=self.on_button_down)
+
 
     def on_joy_axis(self, window, stickid, axisid, value):
         if axisid == 0:
@@ -32,6 +34,11 @@ class Controller(InputDevice):
         else:
             self.data["x"] = 0
             self.data["y"] = 0
+
+    def on_button_down(self, window, stickid, buttonid):
+        print(buttonid)
+        if buttonid == 1:
+            self.data["z"] = 1
 
     def readData(self) -> dict[str, int]:
         return self.data

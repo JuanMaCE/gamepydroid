@@ -22,7 +22,9 @@ class VentanaFlechas(BoxLayout):
         Clock.schedule_interval(self.update_text, 0.1)
 
     def update_text(self, dt):
+
         key_text = self.reader.getData()
+        print(self.reader.getData())
         if key_text:
             self.label.text = f"Acción: {key_text}"
 

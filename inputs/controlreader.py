@@ -3,5 +3,8 @@ from inputs.controller import Controller
 
 
 class ControlReader(DeviceReader):
+    def __init__(self):
+        self.device = Controller()
+
     def createDevice(self) -> Controller:
-        return Controller()
+        return self.device

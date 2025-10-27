@@ -4,11 +4,14 @@ from kivy.graphics import Rectangle
 import random
 from kivy.core.window import Window
 from bullet import Bullet
+from bulletmanager import BulletManager
+from collisionSystem import CollisionSystem
+from enemymovementsystem import EnemyMovementSystem
+from generationgame import GenerationGame
 from gun import Gun
 from inputs.keyboardreader import KeyboardReader
 from mummy import Mummy
 from player import Player
-from button_A import ButtonA
 from button_B import ButtonB
 from inputs.player_move import PlayerMove
 
@@ -18,22 +21,31 @@ class Game(Screen):
         self.level = 1
         self.level_passed = False
 
+        # Sistemas
+        self.generator = None
+        self.collision_system = CollisionSystem()
+        self.bullet_manager = BulletManager()
+
+        # Eventos
         self.update_event = None
         self.bullet_gen_event = None
 
+        # Configuración inicial
+        self._setup_background()
+        self._setup_entities()
+        self._setup_input()
+
+    def _setup_background(self):
         with self.canvas.before:
             self.bg = Rectangle(source='src/fondo.png', pos=self.pos, size=Window.size)
         self.bind(size=self.update_bg, pos=self.update_bg)
 
+    def _setup_entities(self):
         self.size_player = 70
-        self.size_enemy = 100
         self.pos_initial_x = 400
         self.pos_initial_y = 225
-        self.count_of_bulls = 5
 
         self.enemies = []
-        self.bullets = []
-        self.bullets_to_agregate = []
 
         self.player = Player(
             size=(self.size_player, self.size_player),
@@ -43,22 +55,11 @@ class Game(Screen):
             size=(50, 20),
             size_hint=(None, None)
         )
+        self.button = ButtonB()
 
-        # interfaz
-
+    def _setup_input(self):
         self.reader = KeyboardReader()
         self.player_move = PlayerMove()
-
-
-
-        self.button = ButtonB()
-        self.button_A = ButtonA()
-        Window.bind(on_joy_axis=self.on_joy_axis)
-
-
-
-
-
 
     def update_bg(self, *args):
         self.bg.pos = self.pos
@@ -66,95 +67,107 @@ class Game(Screen):
 
     def generate_game(self, level):
         self.reset(level)
-        self.count_of_bulls = self.count_of_bulls + self.level * 2
 
-        count_of_enemies = self.level * 3
-        for j in range(count_of_enemies):
-            rangos_x = [(0, 50), (Window.width - 50, Window.width)]
-            inicio, fin = random.choice(rangos_x)
-            position_x = random.randint(inicio, fin)
+        # Usar el generador
+        self.generator = GenerationGame(level, Window.size)
+        self.enemies = self.generator.generate_enemies()
+        self.bullet_manager.add_bullets(self.generator.calculate_initial_bullets(5))
 
-            rangos_y = [(0, 55), (Window.height - 55, Window.height)]
-            inicio, fin = random.choice(rangos_y)
-            position_y = random.randint(inicio, fin)
+        # Agregar widgets
+        self._add_game_widgets()
 
-            enemy = Mummy(
-                size=(self.size_enemy, self.size_enemy),
-                pos=(position_x, position_y),
-                size_hint=(None, None)
-            )
-            enemy.set_new_velocity(0.05 * self.level)
-            self.enemies.append(enemy)
-            self.add_widget(enemy)
+        # Iniciar eventos
+        self._start_game_events()
+
+    def _add_game_widgets(self):
         self.add_widget(self.button)
         self.add_widget(self.gun)
         self.add_widget(self.player)
-        self.add_widget(self.button_A)
 
+        for enemy in self.enemies:
+            self.add_widget(enemy)
+
+    def _start_game_events(self):
         self.update_event = Clock.schedule_interval(self.update, 1 / 120)
-        self.bullet_gen_event = Clock.schedule_interval(self.generate_bullet, 3)
+        self.bullet_gen_event = Clock.schedule_interval(self._generate_bullet, 3)
+
+    def _generate_bullet(self, dt):
+        self.bullet_manager.generate_random_bullet(Window.size, self.add_widget)
+
+    def update(self, dt):
+        self.gun.move(self.player.x, self.player.y)
+        self.bullet_manager.move_bullets(self.gun.angle)
+
+        for enemy in self.enemies:
+            enemy.follow_player(self.player.x, self.player.y)
+
+        self._check_collisions()
+
+        self.player_move.move(self.player)
+
+        self._check_level_completion()
+
+    def _check_collisions(self):
+        bullets_to_remove, enemies_to_remove = self.collision_system.check_bullet_enemy_collisions(
+            self.bullet_manager.bullets, self.enemies, self.remove_widget
+        )
+
+        for bullet in bullets_to_remove:
+            self.bullet_manager.bullets.remove(bullet)
+        for enemy in enemies_to_remove:
+            self.enemies.remove(enemy)
+
+        if self.collision_system.check_player_enemy_collision(self.player, self.enemies):
+            self._handle_player_death()
+
+        collected_bullets = self.collision_system.check_bullet_pickup_collisions(
+            self.player, self.bullet_manager.bullets_to_agregate, self.remove_widget
+        )
+
+        for bullet in collected_bullets:
+            self.bullet_manager.bullets_to_agregate.remove(bullet)
+            self.bullet_manager.add_bullets(1)
+
+    def _handle_player_death(self):
+        self.remove_widget(self.player)
+        self.remove_widget(self.gun)
+        Clock.schedule_once(self.go_to_finish, 0.1)
+
+    def _check_level_completion(self):
+        if len(self.enemies) == 0 and not self.level_passed:
+            self.level_passed = True
+            Clock.schedule_once(self.pass_level, 0)
+
+    def shoot_bullet(self):
+        self.bullet_manager.shoot_bullet(
+            (self.gun.center_x, self.gun.center_y),
+            self.gun.angle,
+            self.add_widget
+        )
 
     def reset_game(self, level_number):
+        self.reset(level_number)
+
+    def reset(self, level_number):
         self.clear_widgets()
         self.level = level_number
         self.level_passed = False
-
-        # Limpiar listas
         self.enemies.clear()
-        self.bullets.clear()
-        self.bullets_to_agregate.clear()
+        self.bullet_manager.bullets.clear()
+        self.bullet_manager.bullets_to_agregate.clear()
 
-        # Reiniciar jugador
         self.player.pos = (self.pos_initial_x, self.pos_initial_y)
         self.player.velocity_x = 0
         self.player.velocity_y = 0
-        self.count_of_bulls = self.count_of_bulls + self.level * 2
 
     def stop_game(self):
+        self.stop()
+
+    def stop(self):
         if self.update_event:
             self.update_event.cancel()
         if self.bullet_gen_event:
             self.bullet_gen_event.cancel()
-
-    def update(self, dt):
-        self.gun.move(self.player.x, self.player.y)
-        # este es para ver si las balas impactan
-        if self.bullets:
-            for bullet in self.bullets:
-                bullet.move(self.gun.angle)
-                for enemy in self.enemies:
-                    if bullet.collide_widget(enemy):
-                        self.remove_widget(enemy)
-                        self.enemies.remove(enemy)
-                        self.bullets.remove(bullet)
-                        self.remove_widget(bullet)
-                        break
-
-        # este es para ver si hay colisión con el personaje
-        if self.enemies:
-            for enemy in self.enemies:
-                value = self.is_caught(enemy)
-                enemy.follow_player(self.player.x, self.player.y)
-                if self.player.collide_widget(enemy):
-                    self.remove_widget(self.player)
-                    self.remove_widget(enemy)
-                    self.remove_widget(self.gun)
-                    Clock.schedule_once(self.go_to_finish, 0.1)
-
-        if self.bullets_to_agregate:
-            for bullet in self.bullets_to_agregate:
-                if bullet.collide_widget(self.player):
-                    self.count_of_bulls += 1
-                    self.bullets_to_agregate.remove(bullet)
-                    self.remove_widget(bullet)
-
-        if len(self.enemies) == 0:
-            Clock.schedule_once(self.pass_level, 0)
-            self.level_passed = True
-
-        self.player_move.move(self.player)
-
-
 
     def pass_level(self, *args):
         self.stop()
@@ -168,87 +181,16 @@ class Game(Screen):
         self.stop()
         self.manager.current = "finish"
 
-    def shoot_bullet(self):
-        if self.count_of_bulls > 0:
-            bullet = Bullet(pos=(self.gun.center_x - 7, self.gun.center_y - 7), size=(15, 15), size_hint=(None, None))
-            self.count_of_bulls -= 1
-            self.bullets.append(bullet)
-            self.add_widget(bullet)
-
-    def generate_bullet(self, dt):
-        size = 30
-        x = random.randint(0, 975)
-        y = random.randint(0, 505)
-        new_bullet = Bullet(
-            size=(size, size),
-            pos=(x, y),
-            size_hint=(None, None)
-        )
-        self.add_widget(new_bullet)
-        self.bullets_to_agregate.append(new_bullet)
-
-
-    def readDevice(self):
-
-        pass
-
-
-
-
-
-    def reset(self, level_number):
-        self.clear_widgets()
-        self.level = level_number
-        self.level_passed = False
-
-        self.enemies.clear()
-        self.bullets.clear()
-        self.bullets_to_agregate.clear()
-
-        self.player.pos = (self.pos_initial_x, self.pos_initial_y)
-        self.player.velocity_x = 0
-        self.player.velocity_y = 0
-
-    def stop(self):
-        if self.update_event:
-            self.update_event.cancel()
-        if self.bullet_gen_event:
-            self.bullet_gen_event.cancel()
-
-    def is_caught(self, enemies: Mummy):
-        return enemies.collide_widget(self.player)
-
     def on_touch_down(self, touch):
-        condition_x_shoot =  800 <= touch.x <= 880
+        condition_x_shoot = 800 <= touch.x <= 880
         condition_y_shoot = 150 <= touch.y <= 230
 
         if condition_x_shoot and condition_y_shoot:
             self.shoot_bullet()
 
-
     def on_touch_up(self, touch):
         self.player.velocity_y = 0
         self.player.velocity_x = 0
-
-    def on_joy_axis(self, window, stickid, axisid, value):
-        if axisid == 0:
-            if value > 0:
-                self.player.velocity_x = 5
-            if value == 0:
-                self.player.velocity_x = 0
-            if value < 0:
-                self.player.velocity_x = -5
-        elif axisid == 1:
-            if value > -1:
-                self.player.velocity_y = -5
-            if value == -1:
-                self.player.velocity_y = 0
-            if value < -1:
-                self.player.velocity_y = +5
-        else:
-            self.player.velocity_x = 0
-            self.player.velocity_y = 0
-
 
     def on_button_down(self, window, stickid, buttonid):
         if buttonid == 0:

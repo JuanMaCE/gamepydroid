@@ -1,145 +1,90 @@
 from kivy.app import App
+from kivy.uix.button import Button
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
 from kivy.uix.widget import Widget
-from kivy.properties import NumericProperty
-from kivy.clock import Clock
-from kivy.graphics import Rectangle, Color, PushMatrix, PopMatrix, Translate, Scale
-from kivy.core.image import Image as CoreImage
+from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.core.window import Window
-from kivy.graphics.texture import Texture
-import numpy as np
+from kivy.graphics import Color, Rectangle
+from kivy.animation import Animation
 
-Window.size = (800, 600)
 
-CHUNK_PX = 256
-LOAD_RADIUS = 1
-MOVE_SPEED = 200  # px/segundo
+# Configurar fondo tipo DOOM
+Window.clearcolor = (0.05, 0.05, 0.05, 1)  # fondo gris oscuro
 
-class MapWidget(Widget):
-    player_x = NumericProperty(0)
-    player_y = NumericProperty(0)
-    zoom = NumericProperty(1.0)
 
+class DoomButton(Button):
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.keys_pressed = set()
-        self.rects = {}
-        self.chunks = {}
+        super(DoomButton, self).__init__(**kwargs)
+        self.font_size = '30sp'
+        self.bold = True
+        self.color = (1, 0.85, 0, 1)  # texto dorado
+        self.background_normal = ''  # elimina textura por defecto
+        self.background_color = (0.4, 0, 0, 1)  # rojo oscuro base
+        self.size_hint = (1, 0.3)
+        self.border = (8, 8, 8, 8)
+        self.bind(on_enter=self.on_hover, on_leave=self.on_unhover)
 
-        # Cámara
+    def on_hover(self, *args):
+        # Efecto de brillo infernal
+        Animation(background_color=(0.8, 0.1, 0.1, 1), duration=0.2).start(self)
+
+    def on_unhover(self, *args):
+        Animation(background_color=(0.4, 0, 0, 1), duration=0.2).start(self)
+
+
+class DoomLabel(Label):
+    def __init__(self, **kwargs):
+        super(DoomLabel, self).__init__(**kwargs)
+        self.font_size = '60sp'
+        self.bold = True
+        self.color = (1, 0.3, 0, 1)  # rojo lava
+        self.outline_color = (0, 0, 0, 1)
+        self.outline_width = 2
+
+
+class MainMenu(Screen):
+    def __init__(self, **kwargs):
+        super(MainMenu, self).__init__(**kwargs)
+
+        # Fondo tipo metal oxidado (gradiente simulado)
         with self.canvas.before:
-            PushMatrix()
-            self._translate = Translate(0, 0, 0)
-            self._scale = Scale(1.0)
-        with self.canvas.after:
-            PopMatrix()
+            Color(0.08, 0.08, 0.08, 1)
+            self.bg = Rectangle(size=self.size, pos=self.pos)
+            self.bind(size=self._update_bg, pos=self._update_bg)
 
-        # Player (simple rectángulo rojo)
-        self.player_size = 20
+        layout = BoxLayout(orientation='vertical',
+                           spacing=25,
+                           padding=[150, 120])
 
-        Window.bind(on_key_down=self.on_key_down)
-        Window.bind(on_key_up=self.on_key_up)
-        Window.bind(on_mouse_scroll=self.on_mouse_scroll)
+        # Título
+        layout.add_widget(DoomLabel(text="ATTACK OF MOMMIES"))
 
-        self.player_x = 400
-        self.player_y = 300
+        # Espaciador
+        layout.add_widget(Widget(size_hint_y=None, height=30))
 
-        Clock.schedule_interval(self.update, 1 / 60.0)
+        # Botones
+        btn_play = DoomButton(text="PLAY")
+        btn_options = DoomButton(text="OPTIONS")
+        btn_ranking = DoomButton(text="RANKING")
 
-    def world_to_chunk(self, x, y):
-        gx = int(x // CHUNK_PX)
-        gy = int(y // CHUNK_PX)
-        return gx, gy
+        layout.add_widget(btn_play)
+        layout.add_widget(btn_options)
+        layout.add_widget(btn_ranking)
 
-    def load_chunk_texture(self, gx, gy):
-        key = (gx, gy)
-        if key in self.chunks:
-            return self.chunks[key]
+        self.add_widget(layout)
 
-        tex = Texture.create(size=(CHUNK_PX, CHUNK_PX))
-        r = (abs(gx * 70) % 255)
-        g = (abs(gy * 60) % 255)
-        b = ((gx + gy) * 30) % 255
-        arr = np.zeros((CHUNK_PX, CHUNK_PX, 3), dtype='uint8')
-        arr[..., 0] = r
-        arr[..., 1] = g
-        arr[..., 2] = b
-        tex.blit_buffer(arr.tobytes(), colorfmt='rgb', bufferfmt='ubyte')
-        tex.flip_vertical()
-        self.chunks[key] = tex
-        return tex
-
-    def manage_visible_chunks(self):
-        pgx, pgy = self.world_to_chunk(self.player_x, self.player_y)
-        should_be = set()
-        for dx in range(-LOAD_RADIUS, LOAD_RADIUS + 1):
-            for dy in range(-LOAD_RADIUS, LOAD_RADIUS + 1):
-                should_be.add((pgx + dx, pgy + dy))
-
-        for key in should_be:
-            if key not in self.rects:
-                gx, gy = key
-                tex = self.load_chunk_texture(gx, gy)
-                x = gx * CHUNK_PX
-                y = gy * CHUNK_PX
-                with self.canvas:
-                    Rectangle(texture=tex, pos=(x, y), size=(CHUNK_PX, CHUNK_PX))
-                self.rects[key] = True
-
-    def on_key_down(self, window, key, scancode, codepoint, modifiers):
-        if key == 270:  # tecla +
-            self.zoom *= 1.1
-        elif key == 269:  # tecla -
-            self.zoom /= 1.1
-        else:
-            self.keys_pressed.add(key)
-
-    def on_key_up(self, window, key, *args):
-        if key in self.keys_pressed:
-            self.keys_pressed.remove(key)
-
-    def on_mouse_scroll(self, window, x, y, scroll_x, scroll_y):
-        if scroll_y > 0:
-            self.zoom *= 1.1
-        elif scroll_y < 0:
-            self.zoom /= 1.1
-
-    def update(self, dt):
-        # Movimiento del jugador
-        vx, vy = 0, 0
-        if 119 in self.keys_pressed or 273 in self.keys_pressed:  # W o flecha arriba
-            vy += 1
-        if 115 in self.keys_pressed or 274 in self.keys_pressed:  # S o flecha abajo
-            vy -= 1
-        if 97 in self.keys_pressed or 276 in self.keys_pressed:   # A o flecha izq
-            vx -= 1
-        if 100 in self.keys_pressed or 275 in self.keys_pressed:  # D o flecha der
-            vx += 1
-
-        self.player_x += vx * MOVE_SPEED * dt
-        self.player_y += vy * MOVE_SPEED * dt
-
-        # Actualizar chunks visibles
-        self.manage_visible_chunks()
-
-        # Actualizar cámara
-        self._scale.x = self._scale.y = self.zoom
-        self._translate.x = -self.player_x * self.zoom + self.width / 2
-        self._translate.y = -self.player_y * self.zoom + self.height / 2
-
-        # Dibujar jugador
-        self.canvas.remove_group('player')
-        with self.canvas:
-            Color(1, 0, 0, 1, group='player')
-            Rectangle(pos=(self.player_x - self.player_size / 2,
-                           self.player_y - self.player_size / 2),
-                      size=(self.player_size, self.player_size),
-                      group='player')
+    def _update_bg(self, *args):
+        self.bg.size = self.size
+        self.bg.pos = self.pos
 
 
-class ZoomMapApp(App):
+class DoomApp(App):
     def build(self):
-        return MapWidget()
+        sm = ScreenManager()
+        sm.add_widget(MainMenu(name='menu'))
+        return sm
 
 
-if __name__ == "__main__":
-    ZoomMapApp().run()
+if __name__ == '__main__':
+    DoomApp().run()

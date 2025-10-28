@@ -1,4 +1,3 @@
-from kivy.core.window import Window
 from kivy.graphics import Color, Rectangle
 from kivy.uix.label import Label
 from kivy.uix.screenmanager import Screen

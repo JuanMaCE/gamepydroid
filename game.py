@@ -6,7 +6,6 @@ from bulletmanager import BulletManager
 from collisionSystem import CollisionSystem
 from generationgame import GenerationGame
 from gun import Gun
-from inputs.phone import Phone
 from inputs.phonereader import PhoneReader
 from player import Player
 from inputs.player_move import PlayerMove

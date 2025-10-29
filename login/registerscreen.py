@@ -57,7 +57,7 @@ class RegisterScreen(Screen):
 
         # Botones
         btn_register = DoomButton(text="REGISTER")
-        btn_back = DoomButton(text="BACK")
+        btn_back = DoomButton(text="BACK", on_release=lambda btn: self.manager.go_to_login())
 
         layout.add_widget(btn_register)
         layout.add_widget(btn_back)

@@ -30,12 +30,13 @@ class LoginMenu(Screen):
         layout.add_widget(Widget(size_hint_y=None, height=30))
 
         # Botones principales
-        btn_login = DoomButton(text="LOGIN")
-        btn_guest = DoomButton(text="PLAY AS UNKNOWN")
-        btn_register = DoomButton(text="REGISTER")
+        btn_login = DoomButton(text="Login", on_release=lambda btn: self.manager.go_to_login_screen())
+        btn_register = DoomButton(text="Register", on_release=lambda btn: self.manager.go_to_register())
+        btn_unknown = DoomButton(text="Play as Unknown", on_release=lambda btn: self.manager.go_to_main_menu())
+
 
         layout.add_widget(btn_login)
-        layout.add_widget(btn_guest)
+        layout.add_widget(btn_unknown)
         layout.add_widget(btn_register)
 
         # Agregar el layout a la pantalla

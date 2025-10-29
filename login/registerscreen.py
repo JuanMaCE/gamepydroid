@@ -12,17 +12,23 @@ class RegisterScreen(Screen):
     def __init__(self, **kwargs):
         super(RegisterScreen, self).__init__(**kwargs)
 
-        # Fondo oscuro
         with self.canvas.before:
-            Color(0.08, 0.08, 0.08, 1)
-            self.bg = Rectangle(size=self.size, pos=self.pos)
+            self.bg = Rectangle(
+                source='src/inital.png',  # ruta de tu imagen
+                size=self.size,
+                pos=self.pos
+            )
             self.bind(size=self._update_bg, pos=self._update_bg)
+
 
         layout = BoxLayout(orientation='vertical',
                            spacing=20,
                            padding=[150, 100])
 
-        layout.add_widget(DoomLabel(text="REGISTER"))
+        layout.add_widget(DoomLabel(text=""))
+        layout.add_widget(DoomLabel(text=""))
+        layout.add_widget(DoomLabel(text=""))
+
 
         # Campo usuario
         self.username_input = TextInput(

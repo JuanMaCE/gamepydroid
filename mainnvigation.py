@@ -18,3 +18,7 @@ class NavigationInterface(ABC):
     @abstractmethod
     def go_to_login_screen(self):
         pass
+
+    @abstractmethod
+    def go_to_play(self):
+        pass

@@ -32,3 +32,8 @@ class ScreenController(ScreenManager):
 
     def go_to_login_screen(self):
         self.current = "login_screen"
+
+    def go_to_play(self):
+        screenNewLevel = self.get_screen("ScreenNewLevel")
+        screenNewLevel.set_level(1)
+        self.current = 'ScreenNewLevel'

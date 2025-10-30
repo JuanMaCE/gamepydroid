@@ -1,13 +1,19 @@
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.widget import Widget
 from kivy.uix.label import Label
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.textinput import TextInput
-from kivy.uix.button import Button
+from kivy.uix.screenmanager import Screen, ScreenManager
 from kivy.graphics import Color, Rectangle, RoundedRectangle
 from kivy.core.window import Window
-from kivy.animation import Animation
+from users.postgress_user_repository import PostgresUserRepository
+from users.userfinder import UserFinder
+
+# Importa tus componentes personalizados
+from doombutton import DoomButton
+from doomlabel import DoomLabel
 
 Window.clearcolor = (0.1, 0, 0, 1)
 
@@ -86,43 +92,59 @@ class RankingItem(BoxLayout):
         self.rect.size = self.size
 
 
-class RankingApp(App):
-    def build(self):
-        # Datos de ejemplo
-        self.ranking_data = [
-            {"name": "AlexGamer", "score": 15420},
-            {"name": "MariaPro", "score": 14850},
-            {"name": "CarlosX", "score": 13990},
-            {"name": "LunaStrike", "score": 12760},
-            {"name": "DiegoMaster", "score": 11540},
-            {"name": "SofiaElite", "score": 10890},
-            {"name": "JuanSpeed", "score": 9870},
-            {"name": "AnaVictory", "score": 8920},
-        ]
+class RankingScreen(Screen):
+    def __init__(self, **kwargs):
+        super(RankingScreen, self).__init__(**kwargs)
 
-        # Ordenar por puntuación
+        # Fondo con imagen
+        with self.canvas.before:
+            self.bg = Rectangle(
+                source='src/ranking_bg.png',
+                size=self.size,
+                pos=self.pos
+            )
+            self.bind(size=self._update_bg, pos=self._update_bg)
+
+        # Obtener datos de PostgreSQL
+        self.repository = PostgresUserRepository()
+        rows = self.repository.search_top()
+
+        # Convertir las tuplas de PostgreSQL a diccionarios
+        # Estructura de la tabla: id, name, password, level
+        self.ranking_data = []
+        for row in rows:
+            self.ranking_data.append({
+                'name': row[1],  # name está en posición 1
+                'score': row[3]  # level está en posición 3
+            })
+
+        # Si no hay datos, usar datos de ejemplo
+        if not self.ranking_data:
+            self.ranking_data = [
+                {"name": "Sin jugadores", "score": 0}
+            ]
+
+        # Ordenar por puntuación (aunque ya viene ordenado de la BD)
         self.ranking_data.sort(key=lambda x: x['score'], reverse=True)
 
         # Layout principal
         main_layout = BoxLayout(orientation='vertical', padding=20, spacing=15)
 
-        # Título con efecto
+        # Título con efecto usando DoomLabel
         title_box = BoxLayout(size_hint_y=0.15)
         with title_box.canvas.before:
             Color(0.15, 0, 0, 1)
             self.title_rect = RoundedRectangle(pos=title_box.pos, size=title_box.size, radius=[20])
         title_box.bind(pos=self.update_title_rect, size=self.update_title_rect)
 
-        title = Label(
-            text="🏆 RANKING TOP JUGADORES 🏆",
-            font_size='32sp',
-            bold=True,
-            color=(1, 0.84, 0, 1)
+        title = DoomLabel(
+            text=" RANKING TOP JUGADORES ",
+            font_size='32sp'
         )
         title_box.add_widget(title)
 
         # ScrollView para el ranking
-        scroll = ScrollView(size_hint=(1, 0.65))
+        scroll = ScrollView(size_hint=(1, 0.75))
         ranking_layout = GridLayout(
             cols=1,
             spacing=10,
@@ -138,90 +160,26 @@ class RankingApp(App):
 
         scroll.add_widget(ranking_layout)
 
-        # Panel para agregar nuevo jugador
-        add_panel = BoxLayout(orientation='horizontal', size_hint_y=0.12, spacing=10)
-
-        self.name_input = TextInput(
-            hint_text='Nombre del jugador',
-            size_hint_x=0.4,
-            multiline=False,
-            font_size='16sp',
-            background_color=(0.1, 0, 0, 1),
-            foreground_color=(1, 1, 1, 1),
-            cursor_color=(1, 0, 0, 1)
-        )
-
-        self.score_input = TextInput(
-            hint_text='Puntuación',
-            size_hint_x=0.3,
-            multiline=False,
-            input_filter='int',
-            font_size='16sp',
-            background_color=(0.1, 0, 0, 1),
-            foreground_color=(1, 1, 1, 1),
-            cursor_color=(1, 0, 0, 1)
-        )
-
-        add_button = Button(
-            text='Agregar',
-            size_hint_x=0.3,
-            font_size='18sp',
-            bold=True,
-            background_color=(0.8, 0, 0, 1),
-            background_normal=''
-        )
-        add_button.bind(on_press=self.add_player)
-
-        add_panel.add_widget(self.name_input)
-        add_panel.add_widget(self.score_input)
-        add_panel.add_widget(add_button)
-
-        # Nota informativa
-        info = Label(
-            text='Agrega nuevos jugadores al ranking',
-            size_hint_y=0.08,
-            font_size='14sp',
-            italic=True,
-            color=(0.7, 0.7, 0.8, 1)
+        # Botón para volver
+        btn_back = DoomButton(
+            text="Volver al Menú",
+            size_hint_y=0.1,
+            on_release=lambda btn: self.manager.go_to_main_menu(None)
         )
 
         main_layout.add_widget(title_box)
         main_layout.add_widget(scroll)
-        main_layout.add_widget(add_panel)
-        main_layout.add_widget(info)
+        main_layout.add_widget(btn_back)
 
-        self.scroll = scroll
         self.ranking_layout = ranking_layout
 
-        return main_layout
+        # Agregar el layout a la pantalla
+        self.add_widget(main_layout)
+
+    def _update_bg(self, *args):
+        self.bg.size = self.size
+        self.bg.pos = self.pos
 
     def update_title_rect(self, instance, value):
         self.title_rect.pos = instance.pos
         self.title_rect.size = instance.size
-
-    def add_player(self, instance):
-        name = self.name_input.text.strip()
-        score_text = self.score_input.text.strip()
-
-        if name and score_text:
-            try:
-                score = int(score_text)
-                self.ranking_data.append({"name": name, "score": score})
-                self.ranking_data.sort(key=lambda x: x['score'], reverse=True)
-
-                # Limpiar inputs
-                self.name_input.text = ''
-                self.score_input.text = ''
-
-                # Actualizar ranking
-                self.ranking_layout.clear_widgets()
-                for i, player in enumerate(self.ranking_data, 1):
-                    item = RankingItem(i, player['name'], player['score'])
-                    self.ranking_layout.add_widget(item)
-
-            except ValueError:
-                pass
-
-
-if __name__ == '__main__':
-    RankingApp().run()

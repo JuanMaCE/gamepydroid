@@ -35,7 +35,7 @@ class LoginMenu(Screen):
         # Botones principales
         btn_login = DoomButton(text="Login", on_release=lambda btn: self.manager.go_to_login_screen())
         btn_register = DoomButton(text="Register", on_release=lambda btn: self.manager.go_to_register())
-        btn_unknown = DoomButton(text="Play as Unknown", on_release=lambda btn: self.manager.go_to_main_menu())
+        btn_unknown = DoomButton(text="Play as Unknown", on_release=lambda btn: self.manager.go_to_main_menu(None))
 
         layout.add_widget(btn_login)
         layout.add_widget(btn_unknown)

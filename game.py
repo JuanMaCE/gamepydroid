@@ -9,11 +9,15 @@ from gun import Gun
 from inputs.phonereader import PhoneReader
 from player import Player
 from inputs.player_move import PlayerMove
+from users.userfinder import UserFinder
+from users.postgress_user_repository import PostgresUserRepository
+
 
 class Game(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.enemies = None
+        self.id = None
         self.level = 1
         self.level_passed = False
         self.phone = PhoneReader
@@ -91,7 +95,6 @@ class Game(Screen):
         self.bullet_manager.generate_random_bullet(Window.size, self.add_widget)
 
     def update(self, dt):
-
         for enemy in self.enemies:
             enemy.follow_player(self.player.x, self.player.y)
 
@@ -166,4 +169,17 @@ class Game(Screen):
 
     def go_to_finish(self, *args):
         self.stop()
+        print(self.id)
+        if self.id is not None:
+            repository = PostgresUserRepository()
+            search = UserFinder(repository)
+            fila = search.search_by_id(self.id)
+            level_max = fila[0][3]
+            print(self.level, level_max)
+            if self.level > level_max:
+                search.update(self.id, self.level)
+
         self.manager.current = "finish"
+
+    def set_id(self, id: int | None):
+        self.id = id

@@ -6,6 +6,10 @@ from kivy.graphics import Color, Rectangle
 
 from doombutton import DoomButton
 from doomlabel import DoomLabel
+from users.usercreator import UserCreator
+from users.postgress_user_repository import PostgresUserRepository
+
+
 
 
 class RegisterScreen(Screen):
@@ -22,7 +26,7 @@ class RegisterScreen(Screen):
 
 
         layout = BoxLayout(orientation='vertical',
-                           spacing=20,
+                           spacing=40,
                            padding=[150, 100])
 
         layout.add_widget(DoomLabel(text=""))
@@ -62,7 +66,7 @@ class RegisterScreen(Screen):
         layout.add_widget(Widget(size_hint_y=None, height=20))
 
         # Botones
-        btn_register = DoomButton(text="REGISTER")
+        btn_register = DoomButton(text="REGISTER", on_release=lambda btn: self.save())
         btn_back = DoomButton(text="BACK", on_release=lambda btn: self.manager.go_to_login())
 
         layout.add_widget(btn_register)
@@ -73,3 +77,26 @@ class RegisterScreen(Screen):
     def _update_bg(self, *args):
         self.bg.size = self.size
         self.bg.pos = self.pos
+
+    def save(self):
+        repository = PostgresUserRepository()
+        user_creator = UserCreator(repository)
+        username = self.username_input.text.strip()
+        password = self.password_input.text.strip()
+        confirm = self.confirm_input.text.strip()
+        if not username or not password:
+            print("Error: Debes llenar todos los campos")
+            return
+
+        if password != confirm:
+            print("Error: Las contraseñas no coinciden")
+            return
+
+        try:
+            user_creator.run(username, password, "0")
+            print("Usuario creado exitosamente")
+        except Exception as e:
+            print("Error al registrar usuario:", e)
+
+
+

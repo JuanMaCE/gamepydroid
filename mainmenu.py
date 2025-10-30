@@ -9,7 +9,7 @@ from doomlabel import DoomLabel
 class MainMenu(Screen):
     def __init__(self, **kwargs):
         super(MainMenu, self).__init__(**kwargs)
-
+        self.id = None
         with self.canvas.before:
             self.bg = Rectangle(
                 source='src/inital.png',  # ruta de tu imagen
@@ -27,9 +27,9 @@ class MainMenu(Screen):
         layout.add_widget(Widget(size_hint_y=None, height=30))
 
         # Botones
-        btn_play = DoomButton(text="PLAY",  on_release=lambda btn: self.manager.go_to_play())
+        btn_play = DoomButton(text="PLAY",  on_release=lambda btn: self.manager.go_to_play(self.id))
         btn_options = DoomButton(text="OPTIONS")
-        btn_ranking = DoomButton(text="RANKING")
+        btn_ranking = DoomButton(text="RANKING", on_release=lambda btn: self.manager.go_to_ranking())
 
         layout.add_widget(btn_play)
         layout.add_widget(btn_options)
@@ -41,3 +41,5 @@ class MainMenu(Screen):
         self.bg.size = self.size
         self.bg.pos = self.pos
 
+    def set_new_id(self, id: int | None):
+        self.id = id

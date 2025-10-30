@@ -12,7 +12,7 @@ class NavigationInterface(ABC):
         pass
 
     @abstractmethod
-    def go_to_main_menu(self, user=None):
+    def go_to_main_menu(self, id: int | None):
         pass
 
     @abstractmethod
@@ -21,4 +21,8 @@ class NavigationInterface(ABC):
 
     @abstractmethod
     def go_to_play(self):
+        pass
+
+    @abstractmethod
+    def go_to_ranking(self):
         pass

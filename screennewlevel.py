@@ -7,6 +7,7 @@ from kivy.clock import Clock
 class ScreenNewLevel(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.id = None
         self.level = 1
         self._transition_event = None
 
@@ -40,10 +41,11 @@ class ScreenNewLevel(Screen):
         self._transition_event = Clock.schedule_once(self.go_to_game, 2)
 
     def go_to_game(self, dt):
+        print(self.id, "apunto de tirarme a a go to game")
         if self.manager and self.manager.has_screen("game"):
             game_screen = self.manager.get_screen("game")
             game_screen.generate_game(self.level)
-
+            game_screen.set_id(self.id)
             self.manager.current = "game"
         else:
             print("Error: La pantalla 'game' no fue encontrada.")
@@ -52,3 +54,6 @@ class ScreenNewLevel(Screen):
         if self._transition_event:
             self._transition_event.cancel()
             self._transition_event = None
+
+    def set_id(self, id: int | None):
+        self.id = id

@@ -3,7 +3,8 @@ from kivy.uix.widget import Widget
 from kivy.uix.screenmanager import Screen
 from kivy.uix.textinput import TextInput
 from kivy.graphics import Color, Rectangle
-
+from users.userfinder import UserFinder
+from users.postgress_user_repository import PostgresUserRepository
 from doombutton import DoomButton
 from doomlabel import DoomLabel
 
@@ -51,7 +52,7 @@ class LoginScreen(Screen):
         layout.add_widget(Widget(size_hint_y=None, height=20))
 
         # Botones
-        btn_login = DoomButton(text="LOGIN")
+        btn_login = DoomButton(text="LOGIN", on_release=lambda btn: self.search())
         btn_back = DoomButton(text="BACK", on_release=lambda btn: self.manager.go_to_login())
 
         layout.add_widget(btn_login)
@@ -62,3 +63,17 @@ class LoginScreen(Screen):
     def _update_bg(self, *args):
         self.bg.size = self.size
         self.bg.pos = self.pos
+
+    def search(self):
+        user_name = self.username_input.text.strip()
+        user_password = self.password_input.text.strip()
+        repository = PostgresUserRepository()
+        user_finder = UserFinder(repository)
+        col = user_finder.run(user_name)
+        tupla = col[0]
+        if user_name == tupla[1] and user_password == tupla[2]:
+            self.manager.go_to_main_menu(tupla[0])
+
+
+
+

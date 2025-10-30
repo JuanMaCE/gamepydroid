@@ -10,3 +10,14 @@ class UserRepository(ABC):
     def search(self, id: str) -> User:
         pass
 
+    @abstractmethod
+    def update(self, id: str, level: str):
+        pass
+
+    @abstractmethod
+    def search_by_id(self, id: str):
+        pass
+
+    @abstractmethod
+    def search_top(self):
+        pass

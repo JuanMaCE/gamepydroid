@@ -9,8 +9,8 @@ class PostgresUserRepository(UserRepository):
         )
         self.cursor = self._conn.cursor()
 
-    def search(self, id: str):
-        self.cursor.execute('SELECT * FROM "users" WHERE id = %s', (id,))
+    def search(self, name: str):
+        self.cursor.execute('SELECT * FROM "users" WHERE name = %s', (name,))
         rows = self.cursor.fetchall()
         return rows
 
@@ -33,6 +33,20 @@ class PostgresUserRepository(UserRepository):
         except Exception as e:
             self._conn.rollback()
             raise e
+
+    def update(self, id: str, level: str):
+        self.cursor.execute('UPDATE "users" SET level = %s WHERE id = %s', (level, id))
+        self._conn.commit()
+
+    def search_by_id(self, id: str):
+        self.cursor.execute('SELECT * FROM "users" WHERE id = %s', (id,))
+        rows = self.cursor.fetchall()
+        return rows
+
+    def search_top(self):
+        self.cursor.execute('SELECT * FROM "users" WHERE level IS NOT NULL ORDER BY level DESC LIMIT 8')
+        rows = self.cursor.fetchall()
+        return rows
 
     def close(self):
         self.cursor.close()

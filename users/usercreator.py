@@ -1,8 +1,7 @@
-from userrepository import UserRepository
 from users.user import User, create_user
 
 class UserCreator:
-    def __init__(self, repository: UserRepository):
+    def __init__(self, repository):
         self.repository = repository
 
     def run(self, name: str, password: str, level: str):

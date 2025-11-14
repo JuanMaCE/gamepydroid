@@ -15,6 +15,7 @@ class PlayerMove:
         self.reads = [self.reader, self.reader2, self.reader1]
         self.phone_instance = Phone()
 
+
     def setup_phone_controls(self, parent_widget):
         self.phone_instance.set_parent_widget(parent_widget)
         self.reader2.set_phone(self.phone_instance)  # Conectar la misma instancia
@@ -23,7 +24,7 @@ class PlayerMove:
         return self.reader2
 
     def move(self, player: Player, gun: Gun, bullets: BulletManager, addWidget):
-        data = self.reader.getData()
+        data = self.reader1.getData()
         if data["z"] == 1:
             bullets.shoot_bullet(
                 (gun.center_x, gun.center_y),

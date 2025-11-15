@@ -17,7 +17,7 @@ class Mummy(Widget):
             self.rect = Rectangle(
                 pos=(self.x + self.image_offset[0], self.y + self.image_offset[1]),
                 size=self.image_size,
-                source="src/momies/momia.png"
+                source="src/momia.png"
             )
 
         self.bind(pos=self.update_rect)

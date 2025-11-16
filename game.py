@@ -1,3 +1,5 @@
+import random
+
 from kivy.uix.screenmanager import Screen
 from kivy.clock import Clock
 from kivy.graphics import Rectangle
@@ -197,15 +199,15 @@ class Game(Screen):
         """Reposiciona enemigos para que no spawnen dentro de paredes"""
         for enemy in self.enemies:
             # Si el enemigo está en colisión, buscar posición cercana válida
+            pos_x = random.randint(200, 450) + self.player.x
+            pos_y = random.randint(200, 325) + self.player.y
             if self.tile_map.check_collision(enemy.x, enemy.y, enemy.width, enemy.height):
-                # Intentar encontrar una posición válida cerca
-                for offset_x in range(-100, 101, 50):
-                    for offset_y in range(-100, 101, 50):
-                        test_x = enemy.x + offset_x
-                        test_y = enemy.y + offset_y
-                        if not self.tile_map.check_collision(test_x, test_y, enemy.width, enemy.height):
-                            enemy.pos = (test_x, test_y)
-                            break
+
+                enemy.pos = (pos_x, pos_y)
+                print(self.player.x, self.player.y)
+                print(pos_x, pos_y, "posiciones ")
+
+                pass
 
     def _add_game_widgets(self):
         # El mapa ya fue agregado en _setup_map
@@ -223,22 +225,23 @@ class Game(Screen):
         self.bullet_manager.generate_random_bullet(Window.size, self.add_widget)
 
     def update(self, dt):
-        # NUEVO: Los enemigos también deben respetar las paredes
+        # MEJORADO: Los enemigos se mueven con deslizamiento por paredes
         for enemy in self.enemies:
-            # Guardar posición anterior
-            old_x, old_y = enemy.x, enemy.y
+            # Calcular movimiento deseado SIN aplicarlo
+            velocity_x, velocity_y = enemy.calculate_movement(self.player.x, self.player.y)
 
-            # Intentar seguir al jugador
-            enemy.follow_player(self.player.x, self.player.y)
+            # Aplicar movimiento con colisiones del mapa
+            new_x, new_y = self.tile_map.get_valid_position(
+                enemy.x, enemy.y,
+                enemy.width, enemy.height,
+                velocity_x, velocity_y
+            )
 
-            # Verificar si la nueva posición colisiona
-            if self.tile_map.check_collision(enemy.x, enemy.y, enemy.width, enemy.height):
-                # Restaurar posición anterior
-                enemy.pos = (old_x, old_y)
+            enemy.pos = (new_x, new_y)
 
         self._check_collisions()
 
-        # NUEVO: El movimiento del jugador ahora considera el mapa
+        # El movimiento del jugador ahora considera el mapa
         self._move_player_with_map_collision()
 
         self.bullet_manager.move_bullets(self.gun.angle)
@@ -327,13 +330,11 @@ class Game(Screen):
 
     def go_to_finish(self, *args):
         self.stop()
-        print(self.id)
         if self.id is not None:
             repository = PostgresUserRepository()
             search = UserFinder(repository)
             fila = search.search_by_id(self.id)
             level_max = fila[0][3]
-            print(self.level, level_max)
             if self.level > level_max:
                 search.update(self.id, self.level)
 

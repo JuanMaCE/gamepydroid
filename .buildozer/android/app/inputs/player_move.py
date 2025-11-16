@@ -15,6 +15,7 @@ class PlayerMove:
         self.reads = [self.reader, self.reader2, self.reader1]
         self.phone_instance = Phone()
 
+
     def setup_phone_controls(self, parent_widget):
         self.phone_instance.set_parent_widget(parent_widget)
         self.reader2.set_phone(self.phone_instance)  # Conectar la misma instancia

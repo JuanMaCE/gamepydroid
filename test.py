@@ -1,6 +1,7 @@
 from kivy.uix.widget import Widget
 from kivy.graphics import Rectangle, Color
 from kivy.core.window import Window
+import random
 
 
 class Tile:
@@ -123,43 +124,65 @@ class TileMap(Widget):
         """
         Crea el mapa desde una matriz
         0 = vacío, 1 = pared/sólido, 2 = piso, 3 = peligro
-
-        Dim matriz(,) As Integer = {
-
-        Ejemplo:  11 x
         """
         matrix = [
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+             1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+             0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+             1, 1, 1],
         ]
+        matriz = modificar_matriz(matrix, bloques_individuales=15, cuadrados=10)
 
         self.clear_map()
-        self.map_data = matrix
-        self.rows = len(matrix)
-        self.cols = len(matrix[0]) if self.rows > 0 else 0
+        self.map_data = matriz
+        self.rows = len(matriz)
+        self.cols = len(matriz[0]) if self.rows > 0 else 0
 
         # Guardar tamaño base de ventana
         self.base_window_size = (Window.width, Window.height)
 
         with self.canvas:
-            for row_idx, row in enumerate(matrix):
+            for row_idx, row in enumerate(matriz):
                 tile_row = []
                 for col_idx, tile_type in enumerate(row):
                     x = col_idx * self.tile_size
@@ -259,47 +282,30 @@ class TileMap(Widget):
 
     def get_valid_position(self, x, y, width, height, velocity_x, velocity_y):
         """
-        Retorna una posición válida ajustada para evitar colisiones
-        Usa sliding para movimiento suave contra paredes
+        Retorna una posición válida que simplemente detiene el movimiento en caso de colisión
+        No ajusta bruscamente la posición, solo previene el movimiento
+        Intenta movimiento por ejes separados para permitir deslizamiento
         """
-        new_x = x + velocity_x
-        new_y = y + velocity_y
+        new_x = x
+        new_y = y
 
         # Verificar movimiento en X
-        if not self.check_collision(new_x, y, width, height):
-            x = new_x
-        else:
-            # Ajustar a la pared más cercana
-            x = self._adjust_to_wall_x(x, y, width, height, velocity_x)
+        if not self.check_collision(x + velocity_x, y, width, height):
+            new_x = x + velocity_x
 
         # Verificar movimiento en Y
-        if not self.check_collision(x, new_y, width, height):
-            y = new_y
-        else:
-            # Ajustar a la pared más cercana
-            y = self._adjust_to_wall_y(x, y, width, height, velocity_y)
+        if not self.check_collision(new_x, y + velocity_y, width, height):
+            new_y = y + velocity_y
 
-        return x, y
+        return new_x, new_y
 
-    def _adjust_to_wall_x(self, x, y, width, height, velocity_x):
-        """Ajusta la posición X para que quede pegada a la pared"""
-        if self.tile_size == 0:
-            return x
-        col = int((x + width if velocity_x > 0 else x) // self.tile_size)
-        if velocity_x > 0:
-            return col * self.tile_size - width - 1
-        else:
-            return (col + 1) * self.tile_size + 1
+    def can_move_x(self, x, y, width, height, velocity_x):
+        """Verifica si el movimiento en X es válido"""
+        return not self.check_collision(x + velocity_x, y, width, height)
 
-    def _adjust_to_wall_y(self, x, y, width, height, velocity_y):
-        """Ajusta la posición Y para que quede pegada a la pared"""
-        if self.tile_size == 0:
-            return y
-        row = int((y + height if velocity_y > 0 else y) // self.tile_size)
-        if velocity_y > 0:
-            return row * self.tile_size - height - 1
-        else:
-            return (row + 1) * self.tile_size + 1
+    def can_move_y(self, x, y, width, height, velocity_y):
+        """Verifica si el movimiento en Y es válido"""
+        return not self.check_collision(x, y + velocity_y, width, height)
 
     def _rectangles_intersect(self, x1, y1, w1, h1, x2, y2, w2, h2):
         """Verifica si dos rectángulos se intersectan"""
@@ -351,6 +357,7 @@ class MapCollisionHandler:
     def update_player_position(self, player, velocity_x, velocity_y):
         """
         Actualiza la posición del jugador considerando colisiones del mapa
+        Simplemente detiene el movimiento si hay colisión, no ajusta bruscamente
         """
         new_x, new_y = self.tile_map.get_valid_position(
             player.x, player.y,
@@ -366,3 +373,183 @@ class MapCollisionHandler:
     def is_position_valid(self, x, y, width, height):
         """Verifica si una posición es válida (sin colisiones)"""
         return not self.tile_map.check_collision(x, y, width, height)
+
+
+def tiene_uno_adyacente(matriz, fila, col):
+    """Verifica si hay un 1 adyacente (arriba, abajo, izquierda, derecha)"""
+    filas = len(matriz)
+    columnas = len(matriz[0])
+
+    # Direcciones: arriba, abajo, izquierda, derecha
+    direcciones = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+    for df, dc in direcciones:
+        nueva_fila, nueva_col = fila + df, col + dc
+
+        # Verificar límites
+        if 0 <= nueva_fila < filas and 0 <= nueva_col < columnas:
+            if matriz[nueva_fila][nueva_col] == 1:
+                return True
+
+    return False
+
+
+def tiene_uno_en_radio(matriz, fila, col, radio=1):
+    """
+    Verifica si hay un 1 en el radio especificado alrededor de la posición
+    radio=1 verifica las 8 casillas adyacentes
+    """
+    filas = len(matriz)
+    columnas = len(matriz[0])
+
+    for df in range(-radio, radio + 1):
+        for dc in range(-radio, radio + 1):
+            if df == 0 and dc == 0:
+                continue
+
+            nueva_fila, nueva_col = fila + df, col + dc
+
+            # Verificar límites
+            if 0 <= nueva_fila < filas and 0 <= nueva_col < columnas:
+                if matriz[nueva_fila][nueva_col] == 1:
+                    return True
+
+    return False
+
+
+def puede_colocar_cuadrado(matriz, fila, col):
+    """
+    Verifica si se puede colocar un cuadrado 2x2 en la posición
+    y que no haya ningún 1 en las casillas adyacentes al cuadrado
+    y que no esté en el centro de la matriz
+    """
+    filas = len(matriz)
+    columnas = len(matriz[0])
+
+    # Verificar que el cuadrado cabe en la matriz
+    if fila + 1 >= filas or col + 1 >= columnas:
+        return False
+
+    # Verificar que ninguna parte del cuadrado 2x2 esté en el centro
+    if (es_centro_matriz(matriz, fila, col) or
+            es_centro_matriz(matriz, fila, col + 1) or
+            es_centro_matriz(matriz, fila + 1, col) or
+            es_centro_matriz(matriz, fila + 1, col + 1)):
+        return False
+
+    # Verificar que las 4 posiciones estén libres
+    if (matriz[fila][col] != 0 or matriz[fila][col + 1] != 0 or
+            matriz[fila + 1][col] != 0 or matriz[fila + 1][col + 1] != 0):
+        return False
+
+    # Verificar que no haya ningún 1 alrededor del cuadrado 2x2
+    # Necesitamos verificar un área de 4x4 centrada en el cuadrado
+    for check_fila in range(fila - 1, fila + 3):
+        for check_col in range(col - 1, col + 3):
+            # Saltar las posiciones del cuadrado mismo
+            if fila <= check_fila <= fila + 1 and col <= check_col <= col + 1:
+                continue
+
+            # Verificar límites
+            if 0 <= check_fila < filas and 0 <= check_col < columnas:
+                if matriz[check_fila][check_col] == 1:
+                    return False
+
+    return True
+
+
+def colocar_cuadrado(matriz, fila, col):
+    """Coloca un cuadrado 2x2 de 1s"""
+    matriz[fila][col] = 1
+    matriz[fila][col + 1] = 1
+    matriz[fila + 1][col] = 1
+    matriz[fila + 1][col + 1] = 1
+
+
+def es_centro_matriz(matriz, fila, col, radio=2):
+    """
+    Verifica si la posición está en el centro de la matriz
+    radio: define el área central a evitar
+    """
+    filas = len(matriz)
+    columnas = len(matriz[0])
+
+    centro_fila = filas // 2
+    centro_col = columnas // 2
+
+    # Verificar si está dentro del radio del centro
+    if abs(fila - centro_fila) <= radio and abs(col - centro_col) <= radio:
+        return True
+
+    return False
+
+
+def colocar_bloque_individual(matriz):
+    """
+    Intenta colocar un bloque individual de 1
+    que no esté pegado a ningún otro 1 y no esté en el centro
+    """
+    filas = len(matriz)
+    columnas = len(matriz[0])
+    intentos = 0
+    max_intentos = 1000
+
+    while intentos < max_intentos:
+        fila = random.randint(0, filas - 1)
+        col = random.randint(0, columnas - 1)
+
+        # Verificar que la posición esté vacía, no tenga 1s adyacentes y no esté en el centro
+        if (matriz[fila][col] == 0 and
+                not tiene_uno_adyacente(matriz, fila, col) and
+                not es_centro_matriz(matriz, fila, col)):
+            matriz[fila][col] = 1
+            return True
+
+        intentos += 1
+
+    return False
+
+
+def colocar_cuadrado_aleatorio(matriz):
+    """Intenta colocar un cuadrado 2x2 de 1s sin 1s cerca"""
+    filas = len(matriz)
+    columnas = len(matriz[0])
+    intentos = 0
+    max_intentos = 1000
+
+    while intentos < max_intentos:
+        fila = random.randint(0, filas - 2)
+        col = random.randint(0, columnas - 2)
+
+        if puede_colocar_cuadrado(matriz, fila, col):
+            colocar_cuadrado(matriz, fila, col)
+            return True
+
+        intentos += 1
+
+    return False
+
+
+def modificar_matriz(matriz, bloques_individuales=15, cuadrados=10):
+    """
+    Modifica una matriz existente agregando bloques individuales y cuadrados
+    - Bloques individuales: no pueden estar pegados entre sí
+    - Cuadrados 2x2: no pueden tener ningún 1 cerca
+    """
+
+    # Colocar cuadrados primero (son más restrictivos)
+    cuadrados_colocados = 0
+    for _ in range(cuadrados):
+        if colocar_cuadrado_aleatorio(matriz):
+            cuadrados_colocados += 1
+
+    # Colocar bloques individuales (no pueden estar pegados)
+    bloques_colocados = 0
+    for _ in range(bloques_individuales):
+        if colocar_bloque_individual(matriz):
+            bloques_colocados += 1
+
+    print(f"Cuadrados 2x2 colocados: {cuadrados_colocados}/{cuadrados}")
+    print(f"Bloques individuales colocados: {bloques_colocados}/{bloques_individuales}")
+
+    return matriz

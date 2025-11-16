@@ -31,7 +31,7 @@ class LoginMenu(Screen):
 
         # Título grande tipo arcade
         layout.add_widget(DoomLabel(
-            text="",
+            text=" ",
             font_size=dp(40),
             size_hint_y=None,
             height=dp(60)

@@ -61,8 +61,8 @@ class Phone(InputDevice):
         btn_w, btn_h = (80, 80)
         spacing = 10
 
-        base_x = 95
-        base_y = 40
+        base_x = 150
+        base_y = 70
 
         vertical_gap = 20
 
@@ -74,7 +74,7 @@ class Phone(InputDevice):
         shoot_size = (100, 100)
         shoot_x = self.parent.width - shoot_size[0] - 40
 
-        self.btn_shoot = create_simple_button((shoot_x, 40), shoot_size)
+        self.btn_shoot = create_simple_button((shoot_x - 50, 150), shoot_size)
 
         self._draw_arrows()
 

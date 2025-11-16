@@ -49,12 +49,20 @@ class TileMap(Widget):
     TILE_FLOOR = 2
     TILE_HAZARD = 3
 
-    # Colores por defecto para cada tipo
+    # Colores por defecto para cada tipo (si no hay textura)
     TILE_COLORS = {
         TILE_EMPTY: (0, 0, 0, 0),  # Transparente
         TILE_WALL: (0.3, 0.3, 0.3, 1),  # Gris oscuro
         TILE_FLOOR: (0.6, 0.6, 0.6, 0.3),  # Gris claro semi-transparente
         TILE_HAZARD: (0.8, 0.2, 0.2, 0.7)  # Rojo
+    }
+
+    # Texturas/imágenes para cada tipo de tile
+    TILE_TEXTURES = {
+        TILE_EMPTY: None,
+        TILE_WALL: None,  # Puedes asignar: 'ruta/a/wall.png'
+        TILE_FLOOR: None,  # Puedes asignar: 'ruta/a/floor.png'
+        TILE_HAZARD: None  # Puedes asignar: 'ruta/a/hazard.png'
     }
 
     def __init__(self, tile_size=50, **kwargs):
@@ -70,6 +78,16 @@ class TileMap(Widget):
         # Vincular eventos de redimensionamiento
         Window.bind(size=self._on_window_resize)
         self.bind(size=self._on_widget_resize, pos=self._on_widget_resize)
+
+    def set_tile_texture(self, tile_type, texture_path):
+        """
+        Permite configurar la textura para un tipo de tile específico
+
+        Ejemplo:
+        tile_map.set_tile_texture(TileMap.TILE_WALL, 'src/wall.png')
+        tile_map.set_tile_texture(TileMap.TILE_FLOOR, 'src/floor.png')
+        """
+        self.TILE_TEXTURES[tile_type] = texture_path
 
     def _on_window_resize(self, instance, value):
         """Callback cuando la ventana cambia de tamaño"""
@@ -113,12 +131,25 @@ class TileMap(Widget):
                     # Redibujar si no es vacío
                     tile_type = self.map_data[row_idx][col_idx]
                     if tile_type != self.TILE_EMPTY:
-                        color = self.TILE_COLORS.get(tile_type, (1, 1, 1, 1))
-                        tile.color_instruction = Color(*color)
-                        tile.rect = Rectangle(
-                            pos=(tile.x, tile.y),
-                            size=(tile.width, tile.height)
-                        )
+                        # Usar textura si está disponible, sino usar color
+                        texture = self.TILE_TEXTURES.get(tile_type)
+
+                        if texture:
+                            # Dibujar con textura
+                            Color(1, 1, 1, 1)  # Color blanco para no alterar la textura
+                            tile.rect = Rectangle(
+                                pos=(tile.x, tile.y),
+                                size=(tile.width, tile.height),
+                                source=texture
+                            )
+                        else:
+                            # Dibujar con color
+                            color = self.TILE_COLORS.get(tile_type, (1, 1, 1, 1))
+                            tile.color_instruction = Color(*color)
+                            tile.rect = Rectangle(
+                                pos=(tile.x, tile.y),
+                                size=(tile.width, tile.height)
+                            )
 
     def create_from_matrix(self, matrix):
         """
@@ -196,12 +227,25 @@ class TileMap(Widget):
 
                     # Solo dibujar tiles visibles (no vacíos)
                     if tile_type != self.TILE_EMPTY:
-                        color = self.TILE_COLORS.get(tile_type, (1, 1, 1, 1))
-                        tile.color_instruction = Color(*color)
-                        tile.rect = Rectangle(
-                            pos=(tile.x, tile.y),
-                            size=(tile.width, tile.height)
-                        )
+                        # Usar textura si está disponible, sino usar color
+                        texture = self.TILE_TEXTURES.get(tile_type)
+
+                        if texture:
+                            # Dibujar con textura
+                            Color(1, 1, 1, 1)  # Color blanco para no alterar la textura
+                            tile.rect = Rectangle(
+                                pos=(tile.x, tile.y),
+                                size=(tile.width, tile.height),
+                                source=texture
+                            )
+                        else:
+                            # Dibujar con color
+                            color = self.TILE_COLORS.get(tile_type, (1, 1, 1, 1))
+                            tile.color_instruction = Color(*color)
+                            tile.rect = Rectangle(
+                                pos=(tile.x, tile.y),
+                                size=(tile.width, tile.height)
+                            )
 
                     tile_row.append(tile)
                 self.tiles.append(tile_row)
@@ -257,10 +301,7 @@ class TileMap(Widget):
         self.create_from_matrix(matrix)
 
     def check_collision(self, x, y, width, height):
-        """
-        Verifica si un rectángulo colisiona con tiles sólidos
-        Retorna True si hay colisión
-        """
+
         # Calcular qué tiles podría estar tocando
         start_col = max(0, int(x // self.tile_size))
         end_col = min(self.cols - 1, int((x + width) // self.tile_size))
@@ -530,7 +571,7 @@ def colocar_cuadrado_aleatorio(matriz):
     return False
 
 
-def modificar_matriz(matriz, bloques_individuales=15, cuadrados=10):
+def modificar_matriz(matriz, bloques_individuales=10, cuadrados=7):
     """
     Modifica una matriz existente agregando bloques individuales y cuadrados
     - Bloques individuales: no pueden estar pegados entre sí

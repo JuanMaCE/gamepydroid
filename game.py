@@ -82,29 +82,28 @@ class Game(Screen):
         # Crear nuevo mapa
         self.tile_map = TileMap(tile_size=50)
 
+        # NUEVO: Configurar texturas para los tiles
+        self.tile_map.set_tile_texture(TileMap.TILE_WALL, 'src/tumba.png')
+        self.tile_map.set_tile_texture(TileMap.TILE_FLOOR, 'src/hazard.png')
+        self.tile_map.set_tile_texture(TileMap.TILE_HAZARD, 'src/hazard.png')
+
         # Diferentes mapas según el nivel
         if level == 1:
-            # Mapa simple con bordes
             self.tile_map.create_border_map(Window.width, Window.height, border_thickness=2)
-
         elif level == 2:
-            # Mapa con habitación y obstáculo central
             self.tile_map.create_room_map(Window.width, Window.height)
-
         elif level >= 3:
-            # Mapas personalizados con matriz
             map_matrix = self._get_map_matrix_for_level(level)
             self.tile_map.create_from_matrix(map_matrix)
 
-        # Agregar el mapa al juego (después del fondo, antes de las entidades)
+        # Agregar el mapa al juego
         self.add_widget(self.tile_map)
-
-        # Crear manejador de colisiones
         self.map_collision_handler = MapCollisionHandler(self.tile_map)
 
         # Colocar jugador en posición válida
         spawn_x, spawn_y = self.tile_map.get_spawn_position()
         self.player.pos = (spawn_x - self.size_player // 2, spawn_y - self.size_player // 2)
+
 
     def _get_map_matrix_for_level(self, level):
         """Retorna matrices de mapa personalizadas según el nivel"""
@@ -204,8 +203,9 @@ class Game(Screen):
             if self.tile_map.check_collision(enemy.x, enemy.y, enemy.width, enemy.height):
 
                 enemy.pos = (pos_x, pos_y)
-                print(self.player.x, self.player.y)
-                print(pos_x, pos_y, "posiciones ")
+
+            else:
+                enemy.pos = (pos_x + 15 , pos_y + 15)
 
                 pass
 

@@ -24,7 +24,7 @@ class PlayerMove:
         return self.reader2
 
     def move(self, player: Player, gun: Gun, bullets: BulletManager, addWidget):
-        data = self.reader2.getData()
+        data = self.reader1.getData()
         if data["z"] == 1:
             bullets.shoot_bullet(
                 (gun.center_x, gun.center_y),

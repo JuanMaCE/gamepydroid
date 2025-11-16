@@ -6,7 +6,7 @@ from kivy.graphics import Rectangle
 class Mummy(Widget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.velocity = 0.9
+        self.velocity = 1.5
 
         self.size = (40, 40)
 

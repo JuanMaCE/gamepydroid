@@ -197,17 +197,75 @@ class Game(Screen):
     def _spawn_enemies_in_valid_positions(self):
         """Reposiciona enemigos para que no spawnen dentro de paredes"""
         for enemy in self.enemies:
-            # Si el enemigo está en colisión, buscar posición cercana válida
-            pos_x = random.randint(200, 450) + self.player.x
-            pos_y = random.randint(200, 325) + self.player.y
-            if self.tile_map.check_collision(enemy.x, enemy.y, enemy.width, enemy.height):
+            max_attempts = 100
+            attempt = 0
+            valid_position_found = False
 
-                enemy.pos = (pos_x, pos_y)
+            while attempt < max_attempts and not valid_position_found:
+                # Generar posición aleatoria en el área jugable
+                # Evitar spawns muy cerca del jugador
+                min_distance = 200
+                max_distance = 450
 
-            else:
-                enemy.pos = (pos_x + 15 , pos_y + 15)
+                # Ángulo aleatorio
+                angle = random.uniform(0, 2 * 3.14159)
+                distance = random.uniform(min_distance, max_distance)
 
-                pass
+                # Calcular posición relativa al jugador
+                pos_x = self.player.x + distance * random.choice([-1, 1])
+                pos_y = self.player.y + distance * random.choice([-1, 1])
+
+                # Asegurar que esté dentro de los límites del mapa
+                map_width, map_height = self.tile_map.get_map_dimensions()
+                pos_x = max(enemy.width, min(pos_x, map_width - enemy.width))
+                pos_y = max(enemy.height, min(pos_y, map_height - enemy.height))
+
+                # Verificar si la posición es válida (sin colisión con paredes)
+                if not self.tile_map.check_collision(pos_x, pos_y, enemy.width, enemy.height):
+                    enemy.pos = (pos_x, pos_y)
+                    valid_position_found = True
+
+                attempt += 1
+
+            # Si no se encontró posición válida después de todos los intentos,
+            # colocar cerca del spawn del jugador (que sabemos es válido)
+            if not valid_position_found:
+                spawn_x, spawn_y = self.tile_map.get_spawn_position()
+                offset = 100
+                enemy.pos = (spawn_x + offset, spawn_y + offset)
+
+    def _get_random_valid_position_in_map(self):
+        """
+        Método auxiliar: obtiene una posición aleatoria válida en cualquier parte del mapa
+        Útil para spawns más distribuidos
+        """
+        map_width, map_height = self.tile_map.get_map_dimensions()
+        tile_size = self.tile_map.tile_size
+
+        max_attempts = 200
+        for _ in range(max_attempts):
+            # Generar coordenadas aleatorias alineadas a la grilla de tiles
+            col = random.randint(2, self.tile_map.cols - 3)
+            row = random.randint(2, self.tile_map.rows - 3)
+
+            pos_x = col * tile_size
+            pos_y = row * tile_size
+
+            # Verificar que sea una posición válida (no hay colisión)
+            if not self.tile_map.check_collision(pos_x, pos_y, self.size_player, self.size_player):
+                return pos_x, pos_y
+
+        # Si falla, retornar spawn del jugador
+        return self.tile_map.get_spawn_position()
+
+    def _spawn_enemies_distributed(self):
+        """
+        Alternativa: distribuye enemigos por todo el mapa de forma más uniforme
+        Reemplaza a _spawn_enemies_in_valid_positions si prefieres esta estrategia
+        """
+        for enemy in self.enemies:
+            pos_x, pos_y = self._get_random_valid_position_in_map()
+            enemy.pos = (pos_x, pos_y)
 
     def _add_game_widgets(self):
         # El mapa ya fue agregado en _setup_map

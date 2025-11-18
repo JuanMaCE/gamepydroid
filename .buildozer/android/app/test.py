@@ -301,10 +301,7 @@ class TileMap(Widget):
         self.create_from_matrix(matrix)
 
     def check_collision(self, x, y, width, height):
-        """
-        Verifica si un rectángulo colisiona con tiles sólidos
-        Retorna True si hay colisión
-        """
+
         # Calcular qué tiles podría estar tocando
         start_col = max(0, int(x // self.tile_size))
         end_col = min(self.cols - 1, int((x + width) // self.tile_size))
@@ -574,7 +571,7 @@ def colocar_cuadrado_aleatorio(matriz):
     return False
 
 
-def modificar_matriz(matriz, bloques_individuales=15, cuadrados=10):
+def modificar_matriz(matriz, bloques_individuales=10, cuadrados=7):
     """
     Modifica una matriz existente agregando bloques individuales y cuadrados
     - Bloques individuales: no pueden estar pegados entre sí

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GamePyDroid</string>
-    <string name="private_version">01371b13c52b5da953e4cc0d2a920decf0412768</string>
+    <string name="private_version">0588ceb6988f5d2afadb6d419db2c54adadc9522</string>
     <string name="presplash_color">#000000</string>
     <string name="urlScheme">kivy</string>
 </resources>

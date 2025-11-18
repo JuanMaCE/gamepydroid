@@ -83,8 +83,8 @@ class Game(Screen):
         self.tile_map = TileMap(tile_size=50)
 
         # NUEVO: Configurar texturas para los tiles
-        self.tile_map.set_tile_texture(TileMap.TILE_WALL, 'src/wall.png')
-        self.tile_map.set_tile_texture(TileMap.TILE_FLOOR, 'src/floor.png')
+        self.tile_map.set_tile_texture(TileMap.TILE_WALL, 'src/tumba.png')
+        self.tile_map.set_tile_texture(TileMap.TILE_FLOOR, 'src/hazard.png')
         self.tile_map.set_tile_texture(TileMap.TILE_HAZARD, 'src/hazard.png')
 
         # Diferentes mapas según el nivel
@@ -203,8 +203,9 @@ class Game(Screen):
             if self.tile_map.check_collision(enemy.x, enemy.y, enemy.width, enemy.height):
 
                 enemy.pos = (pos_x, pos_y)
-                print(self.player.x, self.player.y)
-                print(pos_x, pos_y, "posiciones ")
+
+            else:
+                enemy.pos = (pos_x + 15 , pos_y + 15)
 
                 pass
 

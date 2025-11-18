@@ -6,11 +6,13 @@ from kivy.graphics import Rectangle
 from kivy.core.window import Window
 from bulletmanager import BulletManager
 from collisionSystem import CollisionSystem
+from enemy_factory import EnemyFactory
 from generationgame import GenerationGame
 from gun import Gun
 from inputs.phonereader import PhoneReader
 from player import Player
 from inputs.player_move import PlayerMove
+from summer_mummy_logic import SummonerMummyLogic
 from users.userfinder import UserFinder
 from users.postgress_user_repository import PostgresUserRepository
 from test import Tile, TileMap, MapCollisionHandler
@@ -267,6 +269,7 @@ class Game(Screen):
             pos_x, pos_y = self._get_random_valid_position_in_map()
             enemy.pos = (pos_x, pos_y)
 
+
     def _add_game_widgets(self):
         # El mapa ya fue agregado en _setup_map
         self.add_widget(self.gun)
@@ -285,17 +288,21 @@ class Game(Screen):
     def update(self, dt):
         # MEJORADO: Los enemigos se mueven con deslizamiento por paredes
         for enemy in self.enemies:
-            # Calcular movimiento deseado SIN aplicarlo
+            # Movimiento con colisiones
             velocity_x, velocity_y = enemy.calculate_movement(self.player.x, self.player.y)
 
-            # Aplicar movimiento con colisiones del mapa
+            # Aplicar movimiento con colisiones
             new_x, new_y = self.tile_map.get_valid_position(
                 enemy.x, enemy.y,
                 enemy.width, enemy.height,
                 velocity_x, velocity_y
             )
-
             enemy.pos = (new_x, new_y)
+
+            # Solo los Summoners actualizan su timer y spawnean
+            if hasattr(enemy.logic, 'update'):  # Todos los enemigos tienen update, Summoner sobrescribe
+                enemy.logic.update(dt, enemy, getattr(self, 'spawn_enemy_callback', None),
+                                   self.player.x, self.player.y)
 
         self._check_collisions()
 
@@ -400,3 +407,9 @@ class Game(Screen):
 
     def set_id(self, id: int | None):
         self.id = id
+
+    def spawn_enemy_callback(self, pos):
+        """Callback para que los Summoner generen nuevas momias"""
+        new_enemy = EnemyFactory.create_mummy(pos)
+        self.enemies.append(new_enemy)
+        self.add_widget(new_enemy)

@@ -1,5 +1,6 @@
+# generationgame.py
 import random
-from mummy import Mummy
+from enemy_factory import EnemyFactory
 
 
 class GenerationGame:
@@ -41,12 +42,15 @@ class GenerationGame:
                 else:
                     position = (self.window_size[0] // 2, self.window_size[1] // 2)
 
-            enemy = Mummy(
-                size=(self.size_enemy, self.size_enemy),
-                pos=position,
-                size_hint=(None, None)
-            )
-            enemy.set_new_velocity(0.05 * self.level)
+            # -> Crear enemigo aleatorio desde la fábrica
+            enemy = EnemyFactory.create_enemy_random(position)
+
+            # Ajustar velocidad base según el nivel (funciona para cualquier lógica que tenga .velocity)
+            try:
+                enemy.logic.velocity += 0.05 * self.level
+            except Exception:
+                pass
+
             enemies.append(enemy)
 
         return enemies

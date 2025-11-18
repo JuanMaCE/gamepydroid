@@ -37,7 +37,6 @@ class Mummy(Widget):
                 texture=self.texture
             )
 
-        # 🔥 Establecer el primer frame ANTES de que aparezca
         self.set_frame(0)
 
         self.bind(pos=self.update_rect, size=self.update_rect)
@@ -45,9 +44,8 @@ class Mummy(Widget):
 
     def set_frame(self, frame_index):
         """Muestra solo UN frame del spritesheet"""
-        # Posición X del frame en el PNG (0, 16, 32, 48)
         frame_x = frame_index * self.sprite_w
-        frame_y = 0  # Fila 0 (si tuvieras múltiples filas, cambiarías esto)
+        frame_y = 0
 
         # Normalización (0–1) para OpenGL
         nx = frame_x / self.texture.width
@@ -55,12 +53,12 @@ class Mummy(Widget):
         nw = self.sprite_w / self.texture.width
         nh = self.sprite_h / self.texture.height
 
-        # 🔥 tex_coords volteados verticalmente: bottom-left, bottom-right, top-right, top-left
+        # 🔥 tex_coords en orden: bottom-left, bottom-right, top-right, top-left
         self.rect.tex_coords = [
-            nx, ny + nh,  # bottom-left (era top-left)
-                nx + nw, ny + nh,  # bottom-right (era top-right)
-                nx + nw, ny,  # top-right (era bottom-right)
-            nx, ny  # top-left (era bottom-left)
+            nx, ny,  # bottom-left
+            nx + nw, ny,  # bottom-right
+            nx + nw, ny + nh,  # top-right
+            nx, ny + nh  # top-left
         ]
 
     def animate(self, dt):
@@ -76,7 +74,7 @@ class Mummy(Widget):
     # 🔥 MÉTODOS PARA COLISIONES (hitbox más pequeño 12x12 centrado)
     def get_hitbox(self):
         """Devuelve (x, y, ancho, alto) del hitbox de 12x12 centrado"""
-        hitbox_size = 12
+        hitbox_size = 0
         offset = (self.display_size - hitbox_size) / 2
         return (
             self.x + offset,

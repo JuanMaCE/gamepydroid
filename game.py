@@ -59,10 +59,8 @@ class Game(Screen):
 
         self.enemies = []
 
-        self.player = Player(
-            size=(self.size_player, self.size_player),
-            size_hint=(None, None)
-        )
+        self.player =  Player(size=(64, 64), size_hint=(None, None))
+
         self.gun = Gun(
             size=(50, 20),
             size_hint=(None, None)
@@ -422,7 +420,13 @@ class Game(Screen):
         self.id = id
 
     def spawn_enemy_callback(self, pos):
-        """Callback para que los Summoner generen nuevas momias"""
-        new_enemy = EnemyFactory.create_mummy(pos)
+        """Callback para que los Summoner o VampireKing generen nuevos enemigos"""
+        # Aseguramos que pos sea siempre una tupla
+        if not isinstance(pos, (list, tuple)):
+            pos = (0, 0)
+        else:
+            pos = tuple(pos)  # en caso de que venga lista, la convertimos a tuple
+
+        new_enemy = EnemyFactory.create_mummy(pos)  # o cualquier enemigo que quieras
         self.enemies.append(new_enemy)
         self.add_widget(new_enemy)

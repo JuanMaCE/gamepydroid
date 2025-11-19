@@ -10,6 +10,12 @@ class Player(Widget):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.size = (30, 45)
+        # --- CONFIGURACIÓN DE HITBOX ---
+        # Cuanto más grande sea el sprite visual respecto a la hitbox real
+        # Ajusta estos valores según tus necesidades:
+        self.visual_padding_x = 40  # El sprite será 40px más ancho que la hitbox
+        self.visual_padding_y = 20  # El sprite será 20px más alto que la hitbox
 
         # Animación y control
         self.frame_counter = 0
@@ -29,22 +35,37 @@ class Player(Widget):
         ]
 
         with self.canvas:
+            # Inicializamos el rectángulo visual
+            # Nota: La posición y tamaño se calculan en update_rect
             self.rect = Rectangle(
-                pos=self.pos,
-                size=self.size,
                 source=self.sprites_right[0]
             )
 
+        # Vinculamos cambios de posición/tamaño a la actualización visual
         self.bind(pos=self.update_rect, size=self.update_rect)
 
     def update_rect(self, *args):
-        self.rect.pos = self.pos
-        self.rect.size = self.size
+        """
+        Esta función centra el Sprite (grande) sobre el Widget (hitbox pequeña).
+        """
+        # 1. Calculamos el tamaño visual (Sprite) sumando el padding
+        visual_width = self.width + self.visual_padding_x
+        visual_height = self.height + self.visual_padding_y
+
+        # 2. Calculamos la posición visual para centrarlo
+        # Restamos la mitad del padding a la posición de la hitbox
+        visual_x = self.x - (self.visual_padding_x / 2)
+        visual_y = self.y - (self.visual_padding_y / 2)
+
+        # 3. Aplicamos al rectángulo gráfico
+        self.rect.pos = (visual_x, visual_y)
+        self.rect.size = (visual_width, visual_height)
 
     def move(self):
         self.y += self.velocity_y
         self.x += self.velocity_x
 
+        # Lógica de colisión con bordes de pantalla (usando la hitbox)
         if self.y < 0:
             self.y = 0
         elif self.top > Window.height:
@@ -57,6 +78,7 @@ class Player(Widget):
 
         self.frame_counter += 1
 
+        # Lógica de animación (sin cambios)
         if self.velocity_x > 0:
             self.facing_right = True
             if self.frame_counter % self.walk_speed == 0:
@@ -74,11 +96,8 @@ class Player(Widget):
                 self.sprites_right[0] if self.facing_right else self.sprites_left[0]
             )
 
-
     def add_velocity_x(self, new_velocity):
         self.velocity_x += new_velocity
 
     def add_velocity_y(self, new_velocity):
         self.velocity_y += new_velocity
-
-

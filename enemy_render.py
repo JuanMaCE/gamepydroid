@@ -46,15 +46,28 @@ class EnemyRenderer:
             return
         frame_x = frame_index * self.sprite_w
         frame_y = 0
+
+        # Cálculos normales (esto NO cambia)
         nx = frame_x / self.texture.width
         ny = frame_y / self.texture.height
         nw = self.sprite_w / self.texture.width
         nh = self.sprite_h / self.texture.height
+
+        # --- ELIMINAR ESTO (Lo que tienes ahora) ---
+        # self.rect.tex_coords = [
+        #     nx, ny,
+        #     nx + nw, ny,
+        #     nx + nw, ny + nh,
+        #     nx, ny + nh
+        # ]
+
+        # --- AGREGAR ESTO (La corrección) ---
+        # Intercambiamos 'ny' con 'ny + nh' en el eje vertical
         self.rect.tex_coords = [
-            nx, ny,
-            nx + nw, ny,
-            nx + nw, ny + nh,
-            nx, ny + nh
+            nx, ny + nh,  # 1. Abajo-Izquierda (apunta al TOPE de la textura)
+                nx + nw, ny + nh,  # 2. Abajo-Derecha
+                nx + nw, ny,  # 3. Arriba-Derecha (apunta a la BASE de la textura)
+            nx, ny  # 4. Arriba-Izquierda
         ]
 
     def animate(self, dt):

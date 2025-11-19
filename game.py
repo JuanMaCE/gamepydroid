@@ -331,25 +331,38 @@ class Game(Screen):
         )
 
     def _check_collisions(self):
+        # 1️⃣ Colisiones bullet-enemigo
         bullets_to_remove, enemies_to_remove = self.collision_system.check_bullet_enemy_collisions(
-            self.bullet_manager.bullets, self.enemies, self.remove_widget
+            self.bullet_manager.bullets, self.enemies
         )
 
         for bullet in bullets_to_remove:
-            self.bullet_manager.bullets.remove(bullet)
-        for enemy in enemies_to_remove:
-            self.enemies.remove(enemy)
+            if bullet in self.bullet_manager.bullets:
+                self.bullet_manager.bullets.remove(bullet)
+                if bullet.parent:
+                    self.remove_widget(bullet)
 
+        for enemy in enemies_to_remove:
+            if enemy in self.enemies:
+                self.enemies.remove(enemy)
+                if enemy.parent:
+                    self.remove_widget(enemy)
+
+        # 2️⃣ Colisión jugador-enemigo
         if self.collision_system.check_player_enemy_collision(self.player, self.enemies):
             self._handle_player_death()
 
+        # 3️⃣ Colisión jugador-bullets por recoger
         collected_bullets = self.collision_system.check_bullet_pickup_collisions(
-            self.player, self.bullet_manager.bullets_to_agregate, self.remove_widget
+            self.player, self.bullet_manager.bullets_to_agregate
         )
 
         for bullet in collected_bullets:
-            self.bullet_manager.bullets_to_agregate.remove(bullet)
+            if bullet in self.bullet_manager.bullets_to_agregate:
+                self.bullet_manager.bullets_to_agregate.remove(bullet)
             self.bullet_manager.add_bullets(1)
+            if bullet.parent:
+                self.remove_widget(bullet)
 
     def _handle_player_death(self):
         self.remove_widget(self.player)
